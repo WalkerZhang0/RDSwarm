@@ -1,0 +1,9 @@
+std_msgs/Header header
+FrameKey key_a
+FrameKey key_b
+time stamp_a
+time stamp_b
+geometry_msgs/Pose relative_pose
+float64[36] covariance
+bool covariance_valid
+string covariance_source

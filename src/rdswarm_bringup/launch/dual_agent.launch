@@ -1,0 +1,24 @@
+<launch>
+  <arg name="session_id" default="offline_run"/>
+  <arg name="config_a" default="$(find rdswarm_bringup)/config/euroc/euroc_mono_imu_config.yaml"/>
+  <arg name="config_b" default="$(find rdswarm_bringup)/config/euroc/euroc_mono_imu_config.yaml"/>
+  <arg name="superpoint_engine" default="$(optenv RDSWARM_SUPERPOINT_ENGINE)"/>
+  <arg name="image_a" default="/drone0/cam0/image_raw"/>
+  <arg name="imu_a" default="/drone0/imu0"/>
+  <arg name="image_b" default="/drone1/cam0/image_raw"/>
+  <arg name="imu_b" default="/drone1/imu0"/>
+  <arg name="output_a" default="$(env HOME)/.ros/rdswarm/agent0"/>
+  <arg name="output_b" default="$(env HOME)/.ros/rdswarm/agent1"/>
+  <include file="$(find rdswarm_bringup)/launch/mono_agent.launch">
+    <arg name="agent_id" value="0"/><arg name="session_id" value="$(arg session_id)"/>
+    <arg name="config_file" value="$(arg config_a)"/><arg name="superpoint_engine" value="$(arg superpoint_engine)"/>
+    <arg name="image_topic" value="$(arg image_a)"/><arg name="imu_topic" value="$(arg imu_a)"/>
+    <arg name="output_path" value="$(arg output_a)"/>
+  </include>
+  <include file="$(find rdswarm_bringup)/launch/mono_agent.launch">
+    <arg name="agent_id" value="1"/><arg name="session_id" value="$(arg session_id)"/>
+    <arg name="config_file" value="$(arg config_b)"/><arg name="superpoint_engine" value="$(arg superpoint_engine)"/>
+    <arg name="image_topic" value="$(arg image_b)"/><arg name="imu_topic" value="$(arg imu_b)"/>
+    <arg name="output_path" value="$(arg output_b)"/>
+  </include>
+</launch>

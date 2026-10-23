@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rdswarm_core</name><version>0.1.0</version>
+  <description>Transport independent RDSwarm identity and validation contracts.</description>
+  <maintainer email="maintainers@example.invalid">RDSwarm maintainers</maintainer>
+  <license>GPL-3.0-only</license><buildtool_depend>catkin</buildtool_depend>
+</package>

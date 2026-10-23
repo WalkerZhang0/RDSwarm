@@ -1,0 +1,27 @@
+<launch>
+  <arg name="agent_id" default="0"/>
+  <arg name="session_id" default="offline_run"/>
+  <arg name="agent_ns" default="agent$(arg agent_id)"/>
+  <arg name="config_file" default="$(find rdswarm_bringup)/config/euroc/euroc_mono_imu_config.yaml"/>
+  <arg name="superpoint_engine" default="$(optenv RDSWARM_SUPERPOINT_ENGINE)"/>
+  <arg name="output_path" default="$(env HOME)/.ros/rdswarm/agent$(arg agent_id)"/>
+  <arg name="image_topic" default="/cam0/image_raw"/>
+  <arg name="imu_topic" default="/imu0"/>
+  <arg name="cache_keyframes" default="true"/>
+  <group ns="$(arg agent_ns)">
+    <node pkg="vins" type="vins_node" name="vins" output="screen"
+          args="&quot;$(arg config_file)&quot;" required="true">
+      <param name="agent_id" value="$(arg agent_id)"/>
+      <param name="session_id" value="$(arg session_id)"/>
+      <param name="superpoint_engine_path" value="$(arg superpoint_engine)"/>
+      <param name="output_path" value="$(arg output_path)"/>
+      <param name="include_keyframe_image" value="true"/>
+      <remap from="/cam0/image_raw" to="$(arg image_topic)"/>
+      <remap from="/imu0" to="$(arg imu_topic)"/>
+    </node>
+    <node if="$(arg cache_keyframes)" pkg="rdswarm_loop" type="rdswarm_loop_input_node"
+          name="loop_inputs" output="screen">
+      <remap from="keyframes" to="vins/keyframes"/>
+    </node>
+  </group>
+</launch>

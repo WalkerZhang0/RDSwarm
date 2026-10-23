@@ -1,0 +1,11 @@
+FrameKey key_a
+FrameKey key_b
+---
+bool success
+string status
+uint64 snapshot_version
+time data_cutoff
+geometry_msgs/Pose relative_pose
+# Row-major, [pose_a(6), pose_b(6)], rx ry rz tx ty tz.
+float64[144] joint_covariance
+float64[36] relative_covariance

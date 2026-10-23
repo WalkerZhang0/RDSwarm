@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.10)
+project(rdswarm_core)
+find_package(catkin REQUIRED)
+catkin_package(INCLUDE_DIRS include)
+install(DIRECTORY include/ DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})

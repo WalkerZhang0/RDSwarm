@@ -1,0 +1,345 @@
+{
+  "source_directory": "/home/walker/swarm/fusion_ws/src/VINS-Fusion",
+  "source_commit": "be55a937a57436548ddfb1bd324bc1e9a9e828e0",
+  "source_has_local_modifications": true,
+  "imported_files": [
+    {
+      "path": "vins_estimator/src/KITTIGPSTest.cpp",
+      "sha256": "e6ed2b93c433b5b20b882ad50f0f73c4a8b9aad0af439b35d3be71b1f14e220b"
+    },
+    {
+      "path": "vins_estimator/src/KITTIOdomTest.cpp",
+      "sha256": "01e0c6f528b9dbfa3f0b7230c1ff4ac7d577a89850e385d6060c695ea0c1d4a2"
+    },
+    {
+      "path": "vins_estimator/src/estimator/estimator.cpp",
+      "sha256": "66ccb3457d38b1a40c111fcf0457a15a0a0528301e38a3994a6bb00526726a69"
+    },
+    {
+      "path": "vins_estimator/src/estimator/estimator.h",
+      "sha256": "f38095604d77a278882eb4f2f6c94f7ceb36cfd1b39deb53229f1b9023ed0898"
+    },
+    {
+      "path": "vins_estimator/src/estimator/feature_manager.cpp",
+      "sha256": "1af1d79b00f8e4a309a92e9a2f687cdbd9d98b22d6041a525cb81e2a7c0e8c76"
+    },
+    {
+      "path": "vins_estimator/src/estimator/feature_manager.h",
+      "sha256": "bd0b1c8296a401e2408eba7a395feeabc468aab8da90ff56a3facc0b405cc97b"
+    },
+    {
+      "path": "vins_estimator/src/estimator/parameters.cpp",
+      "sha256": "732e12776829fe48778d751f06b2a8509028e143b4fe3ae0ceeb117992837e6c"
+    },
+    {
+      "path": "vins_estimator/src/estimator/parameters.h",
+      "sha256": "70b1b59783ec3a13f53a31f44dfebe739415dd76952ef3594eb0f1b29847bd5d"
+    },
+    {
+      "path": "vins_estimator/src/factor/imu_factor.h",
+      "sha256": "e022c1dfa6573882f35d675539e9c4e91d4e1c4b93dfd5e6c8dd54a448e5b447"
+    },
+    {
+      "path": "vins_estimator/src/factor/initial_bias_factor.h",
+      "sha256": "b9468b5c6f9968173dc8f875918c6c58d1bf6dd9eaf2be5baa21897a8f527128"
+    },
+    {
+      "path": "vins_estimator/src/factor/initial_pose_factor.h",
+      "sha256": "8ad959da14481472149750b79e105f348933b068b3922becb2b0cab615e528cd"
+    },
+    {
+      "path": "vins_estimator/src/factor/integration_base.h",
+      "sha256": "cb20ed6b8c52a5fb1483a9405a5da725a0060e71b28e01e8985dde4eed9e199c"
+    },
+    {
+      "path": "vins_estimator/src/factor/marginalization_factor.cpp",
+      "sha256": "ea67668909a08196aba34bd5337499cfce13d3c1bdf67e4754e19c96146f8005"
+    },
+    {
+      "path": "vins_estimator/src/factor/marginalization_factor.h",
+      "sha256": "86001a5c4aeb5ef50815044d3195d2302cee7d09fbfc415f662a0a36af4a9def"
+    },
+    {
+      "path": "vins_estimator/src/factor/pose_local_parameterization.cpp",
+      "sha256": "8a797b75b32d3ad4202d8d808a83eb6ab43dc05153dfcb80f66e9f04460ab655"
+    },
+    {
+      "path": "vins_estimator/src/factor/pose_local_parameterization.h",
+      "sha256": "550bf606422f9997bf9b52e37828e877dfece414282785a2216bc27a8a6087f0"
+    },
+    {
+      "path": "vins_estimator/src/factor/projectionOneFrameTwoCamFactor.cpp",
+      "sha256": "2230f8b6c8624ef13f9b03bb6fcc1fdc58dbca55a85b15ffe9e979e9b5605d61"
+    },
+    {
+      "path": "vins_estimator/src/factor/projectionOneFrameTwoCamFactor.h",
+      "sha256": "8c3dbe883cc8aedcc8d4e5c8df9e7b6f440ce79abcf103983fa5b641b1772c86"
+    },
+    {
+      "path": "vins_estimator/src/factor/projectionTwoFrameOneCamFactor.cpp",
+      "sha256": "f95a01539706fa41e80dd86fc979cecf2ecd05656fec86034d46571ced3a91d6"
+    },
+    {
+      "path": "vins_estimator/src/factor/projectionTwoFrameOneCamFactor.h",
+      "sha256": "5b79970ebd7c5008fd77ab240be0020c1de8c55e09606014e08a5d4d22b6eaf2"
+    },
+    {
+      "path": "vins_estimator/src/factor/projectionTwoFrameTwoCamFactor.cpp",
+      "sha256": "d22b9ed1f823d0bf6d61ddc2cb02c2f0280b657b9e3be684cc38326442daa8ca"
+    },
+    {
+      "path": "vins_estimator/src/factor/projectionTwoFrameTwoCamFactor.h",
+      "sha256": "729a876ea8ca8f903dafa3f6359405ea45ed238c2b731d0e2645b2c00130aec4"
+    },
+    {
+      "path": "vins_estimator/src/factor/projection_factor.cpp",
+      "sha256": "57a8ce7d62e12242e14a7ee5c0a25a4d61e9af042b2339ab38f10722f8276b79"
+    },
+    {
+      "path": "vins_estimator/src/factor/projection_factor.h",
+      "sha256": "9ef448db5afb9e53ac2d6d2c7ca360648118c16feeea87f847f63ccd46f9b62c"
+    },
+    {
+      "path": "vins_estimator/src/featureTracker/feature_tracker.cpp",
+      "sha256": "1424e1f4cb18a207506005e52a7182f79fa70a3dd883c944b0f2ec053d0e139d"
+    },
+    {
+      "path": "vins_estimator/src/featureTracker/feature_tracker.h",
+      "sha256": "d342bacd6bc500e854f1ac8245249ccf53069f8194b94cbbc0e1dbbf51321d77"
+    },
+    {
+      "path": "vins_estimator/src/featureTracker/superpoint_extractor.cpp",
+      "sha256": "7d0e860d6b60023f5df9f69a6e58e3c1caae227eed6f10ba20590b584b450cf3"
+    },
+    {
+      "path": "vins_estimator/src/featureTracker/superpoint_extractor.h",
+      "sha256": "7529ce91f55e4b50dddc759d2e8177c1505f3115280c6c10962cad473d430375"
+    },
+    {
+      "path": "vins_estimator/src/initial/initial_aligment.cpp",
+      "sha256": "4070e2c632cce30b5e604fa6fa2af6af9c1512541d64eb8d3ec8952f87ed30be"
+    },
+    {
+      "path": "vins_estimator/src/initial/initial_alignment.h",
+      "sha256": "a92c7c55d24c0298da76bd397799378346c7c45f56e457e9371eff5f5f7ce89c"
+    },
+    {
+      "path": "vins_estimator/src/initial/initial_ex_rotation.cpp",
+      "sha256": "627a8fd157ad8ca0dcebec50fc9ad9b5c3a3edd13dbb38d5972c36e8b370fdab"
+    },
+    {
+      "path": "vins_estimator/src/initial/initial_ex_rotation.h",
+      "sha256": "253df50cb3c651b02578da8f9df6dcef50907cc40d32e030e04da98a4cfcf51f"
+    },
+    {
+      "path": "vins_estimator/src/initial/initial_sfm.cpp",
+      "sha256": "0b54eaf9e01ce6a74c8daebd132423466ebc97939c84666bc54482c34a090d0e"
+    },
+    {
+      "path": "vins_estimator/src/initial/initial_sfm.h",
+      "sha256": "63d86671f0280c460f68fb2379032a5b5994c39c65fd00a64f485dafd3021a59"
+    },
+    {
+      "path": "vins_estimator/src/initial/solve_5pts.cpp",
+      "sha256": "457e9db06d5a24d99286bd5b1abbb1558bf906ceb2d73c9b17db81c0d4e82a0b"
+    },
+    {
+      "path": "vins_estimator/src/initial/solve_5pts.h",
+      "sha256": "458eb5e02657e841113e43e8cd46be224f76b5444649a6ddfea605ac40656c11"
+    },
+    {
+      "path": "vins_estimator/src/rosNodeTest.cpp",
+      "sha256": "f0231fe2987ebad4d8bce92a5551b65ae347f8a398b176752627bef5f8e45f0d"
+    },
+    {
+      "path": "vins_estimator/src/utility/CameraPoseVisualization.cpp",
+      "sha256": "4bb6fb5beaab9972333b5f94faa6dd645603814bbfe16ac49990036496070e14"
+    },
+    {
+      "path": "vins_estimator/src/utility/CameraPoseVisualization.h",
+      "sha256": "bffffcd831f4b93efcc17523e0929266e14e9f9ae53c4843a243cc125f142278"
+    },
+    {
+      "path": "vins_estimator/src/utility/tic_toc.h",
+      "sha256": "65b450e5230d3a4de75623fc6731fb1a7620ba67169440a89825ce8a85ccbd1e"
+    },
+    {
+      "path": "vins_estimator/src/utility/utility.cpp",
+      "sha256": "d3c49f1f5fa890c9af5afa13ffd8a7e18d79e64dc20722491d709ae23e329e91"
+    },
+    {
+      "path": "vins_estimator/src/utility/utility.h",
+      "sha256": "78b85ab49b58f6d5fb698d4e027acc3c8e7d7d5981378c5aa3309c0140316c7f"
+    },
+    {
+      "path": "vins_estimator/src/utility/visualization.cpp",
+      "sha256": "6fbfe4962d582e938f63cba372dec4231641a074da3f7fba6db7768beeac7f7d"
+    },
+    {
+      "path": "vins_estimator/src/utility/visualization.h",
+      "sha256": "92743e490e86e3118a43aa01260d08800349cfad734fd8e20e9524ff94ecc2e8"
+    },
+    {
+      "path": "vins_estimator/cmake/FindEigen.cmake",
+      "sha256": "7c4f178f006af17c9400626e33998a40a6cf6be88921a13332a354a677f8d2fd"
+    },
+    {
+      "path": "camera_models/src/calib/CameraCalibration.cc",
+      "sha256": "8de5811cbb5b1bb706f7f3922d4a1fd379fb5897982a5d598d6b1645ad37959f"
+    },
+    {
+      "path": "camera_models/src/camera_models/Camera.cc",
+      "sha256": "75674f13c5fc01e49d4da42508f3a410aed2f48b9ddf6d42c069f1c7d6f1ff7a"
+    },
+    {
+      "path": "camera_models/src/camera_models/CameraFactory.cc",
+      "sha256": "c341cff61cc6a0292a8dfccddb3914475a12e5b6db4d827fd178fb059efdfe99"
+    },
+    {
+      "path": "camera_models/src/camera_models/CataCamera.cc",
+      "sha256": "83094497e743f9e1a99ffa4eb88fc0a76af60368102934b0b0d72a0e586fc8db"
+    },
+    {
+      "path": "camera_models/src/camera_models/CostFunctionFactory.cc",
+      "sha256": "fa556c6686efbb21d5283ddd06712735f547fe136e9a4b75697407e98dc3a577"
+    },
+    {
+      "path": "camera_models/src/camera_models/EquidistantCamera.cc",
+      "sha256": "1ad6547849a9f79cb01567c290ce700802013c272f50acb780e4c08750215334"
+    },
+    {
+      "path": "camera_models/src/camera_models/PinholeCamera.cc",
+      "sha256": "3d1067126c0407cfcc681335da92727e955cce75b58f7c91925f3d97136a7240"
+    },
+    {
+      "path": "camera_models/src/camera_models/PinholeFullCamera.cc",
+      "sha256": "3469c880d1dfa82e5f1740d791ea147c28c546dca4524bb2f0c94c3a7eceeef6"
+    },
+    {
+      "path": "camera_models/src/camera_models/ScaramuzzaCamera.cc",
+      "sha256": "2f3ca9279d7a8cb917162c0a99fe6f5134b44beeaf040be8b2344f3fe9744b72"
+    },
+    {
+      "path": "camera_models/src/chessboard/Chessboard.cc",
+      "sha256": "660b863b1dcd93db4cd31405a306fadb5349ff45ba44f61b1f6643b92949b5be"
+    },
+    {
+      "path": "camera_models/src/gpl/EigenQuaternionParameterization.cc",
+      "sha256": "a1f7fc393b69fae8b1444ec082c9b54b12eabe45b4102de3c5281d57cf23d8af"
+    },
+    {
+      "path": "camera_models/src/gpl/gpl.cc",
+      "sha256": "9302a04931d9a1297fb54f4fd172fd5b488a4a9076ad11606f33047cb0708786"
+    },
+    {
+      "path": "camera_models/src/intrinsic_calib.cc",
+      "sha256": "0710f902aa6890599e05e46673f3891a0d7fb0e5c191928c53304e2add92b174"
+    },
+    {
+      "path": "camera_models/src/sparse_graph/Transform.cc",
+      "sha256": "547e5ccb91ecbaddda165f5d49091302cc4828ecd629e51f22c903d6e533182b"
+    },
+    {
+      "path": "camera_models/include/camodocal/calib/CameraCalibration.h",
+      "sha256": "63d41e8e2577015f62e1fb82fa6e438adc775fce1c5f43082c53482a50070462"
+    },
+    {
+      "path": "camera_models/include/camodocal/camera_models/Camera.h",
+      "sha256": "7836bd7d04533bb8e79b7e82b3e1319f11a8d5f54221e276d5b5845a211f7e0c"
+    },
+    {
+      "path": "camera_models/include/camodocal/camera_models/CameraFactory.h",
+      "sha256": "9d54c326c456e9493c9fd384c3950d8448e364a94e319b62e247632397fe75b4"
+    },
+    {
+      "path": "camera_models/include/camodocal/camera_models/CataCamera.h",
+      "sha256": "e9da4765013d8188f8c58b5cf78776068ae054bf24640b157dbf548223389d84"
+    },
+    {
+      "path": "camera_models/include/camodocal/camera_models/CostFunctionFactory.h",
+      "sha256": "60e589ec44d83beddf5393c3ab8d403daca231ee224cd75a5a7d0cf43e062ac4"
+    },
+    {
+      "path": "camera_models/include/camodocal/camera_models/EquidistantCamera.h",
+      "sha256": "b4488b87e523b7c4430ab6fddc353ebc7731c8264b8852d7d49410aad8e88995"
+    },
+    {
+      "path": "camera_models/include/camodocal/camera_models/PinholeCamera.h",
+      "sha256": "db42feac10864ac0ef97ca94807950a83ac3fd1a69b2147c8a4ba7f4757c134e"
+    },
+    {
+      "path": "camera_models/include/camodocal/camera_models/PinholeFullCamera.h",
+      "sha256": "109059d5e89fb963675e09d454dcdb1506af0d1313863d793a5159bf66a735eb"
+    },
+    {
+      "path": "camera_models/include/camodocal/camera_models/ScaramuzzaCamera.h",
+      "sha256": "45555b697b287bcc2898dc0ea17081c3e81aa3eb3bb50adda8f76ab7aa9bc45f"
+    },
+    {
+      "path": "camera_models/include/camodocal/chessboard/Chessboard.h",
+      "sha256": "3828214718f4eda923325a0f18c7456f9a498b4a0b95be5670ea2e4ee791725b"
+    },
+    {
+      "path": "camera_models/include/camodocal/chessboard/ChessboardCorner.h",
+      "sha256": "461ddc9b7755ebc89ff732279b27c0d9453a5502660b2782ce14697dbec4867a"
+    },
+    {
+      "path": "camera_models/include/camodocal/chessboard/ChessboardQuad.h",
+      "sha256": "2186c36fe9524106e57aeaf81c13af8d1eadec2131d0f63d5480866e2d335c08"
+    },
+    {
+      "path": "camera_models/include/camodocal/chessboard/Spline.h",
+      "sha256": "7a0a0511323b972f31f7b1280c3d89c7c784f53ffacbe38c8b947f00bd4a2970"
+    },
+    {
+      "path": "camera_models/include/camodocal/gpl/EigenQuaternionParameterization.h",
+      "sha256": "7d5fcd4461f9b14fd2f3547ac85bb45d7134d744bcfe0fddc6e378ecfd18089e"
+    },
+    {
+      "path": "camera_models/include/camodocal/gpl/EigenUtils.h",
+      "sha256": "730bca241835c929d2e4e452b985448db8288683d10da0231e157c11a884f29f"
+    },
+    {
+      "path": "camera_models/include/camodocal/gpl/gpl.h",
+      "sha256": "5bd935a6154869adf9725fcc000c8a48c88121ecb1db9689ef03f9d4531081d0"
+    },
+    {
+      "path": "camera_models/include/camodocal/sparse_graph/Transform.h",
+      "sha256": "9d24c86797870b96194b487bdcfadcae230155df7364055600666b6c90ca5cd9"
+    },
+    {
+      "path": "vins_estimator/CMakeLists.txt",
+      "sha256": "258ba62f312153e04e037db7bd6cc552b6bf357ee3772943f9f43f569a5103bb"
+    },
+    {
+      "path": "vins_estimator/package.xml",
+      "sha256": "5e124e8945725204dde884f418f787562bbd46121a1cdf7b90bb09bbbbdfda2c"
+    },
+    {
+      "path": "camera_models/CMakeLists.txt",
+      "sha256": "c196f6f274af91afa5706f1ba5c35f4dba780968a23dca7f9bebf6c27bd65b46"
+    },
+    {
+      "path": "camera_models/package.xml",
+      "sha256": "06be1e22b925d50f000928ac0a4d7ae2db236f2981bd41dcefab8048bde6c3dc"
+    },
+    {
+      "path": "LICENCE",
+      "sha256": "589ed823e9a84c56feb95ac58e7cf384626b9cbf4fda2a907bc36e103de1bad2"
+    },
+    {
+      "path": "README.md",
+      "sha256": "452b634ec9c94fef4bf77c26408d4591d8859a8b9dd0c3a148f28fbbb1d5c25d"
+    }
+  ],
+  "excluded": [
+    ".git",
+    "models and serialized TensorRT engines",
+    "datasets",
+    "logs",
+    "loop_fusion",
+    "global_fusion",
+    "build artifacts"
+  ],
+  "import_date": "2026-10-23"
+}

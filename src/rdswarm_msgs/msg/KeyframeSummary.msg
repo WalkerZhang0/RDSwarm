@@ -1,0 +1,9 @@
+std_msgs/Header header
+FrameKey key
+uint32 image_width
+uint32 image_height
+uint32 feature_count
+bool geometry_available
+bool global_descriptor_valid
+string global_descriptor_model
+float32[] global_descriptor

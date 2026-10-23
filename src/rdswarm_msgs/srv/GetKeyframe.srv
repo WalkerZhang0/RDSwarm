@@ -1,0 +1,7 @@
+FrameKey key
+bool include_image
+bool include_descriptors
+---
+bool success
+string status
+Keyframe keyframe

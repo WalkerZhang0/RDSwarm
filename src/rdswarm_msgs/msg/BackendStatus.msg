@@ -1,0 +1,9 @@
+std_msgs/Header header
+uint64 snapshot_version
+time data_cutoff
+bool initialized
+string status
+FrameKey[] state_keys
+geometry_msgs/Pose[] body_poses
+float64 update_time_ms
+bool covariance_available

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rdswarm_bringup</name><version>0.1.0</version>
+  <description>Single and dual agent offline RDSwarm launch files.</description>
+  <maintainer email="maintainers@example.invalid">RDSwarm maintainers</maintainer>
+  <license>GPL-3.0-only</license><buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>vins</exec_depend><exec_depend>rdswarm_loop</exec_depend>
+</package>
