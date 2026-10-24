@@ -56,6 +56,7 @@ devel_cpu/lib/rdswarm_backend/constraint_contract_test
 - [本轮验证记录](docs/LOOP_VALIDATION.md)
 - [本轮修改记录](2026-10-24_Portable_Loop_Core.md)
 - [来源与许可证](docs/THIRD_PARTY.md)
+- [S3E ROS2→ROS1 数据准备](docs/S3E_CONVERSION.md)
 - [第一阶段历史记录](docs/PHASE1.md)
 
 合成几何、数值对照和 ROS 接口测试不等于真实多机回环精度/召回率验证。
