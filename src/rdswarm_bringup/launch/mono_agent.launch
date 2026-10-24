@@ -3,6 +3,9 @@
   <arg name="session_id" default="offline_run"/>
   <arg name="agent_ns" default="agent$(arg agent_id)"/>
   <arg name="config_file" default="$(find rdswarm_bringup)/config/euroc/euroc_mono_imu_config.yaml"/>
+  <arg name="use_superpoint" default="0"/>
+  <arg name="superpoint_backend" default="opencv"/>
+  <arg name="superpoint_model" default=""/>
   <arg name="superpoint_engine" default="$(optenv RDSWARM_SUPERPOINT_ENGINE)"/>
   <arg name="output_path" default="$(env HOME)/.ros/rdswarm/agent$(arg agent_id)"/>
   <arg name="image_topic" default="/cam0/image_raw"/>
@@ -13,6 +16,9 @@
           args="&quot;$(arg config_file)&quot;" required="true">
       <param name="agent_id" value="$(arg agent_id)"/>
       <param name="session_id" value="$(arg session_id)"/>
+      <param name="use_superpoint" type="int" value="$(arg use_superpoint)"/>
+      <param name="superpoint_backend" value="$(arg superpoint_backend)"/>
+      <param name="superpoint_model_path" value="$(arg superpoint_model)"/>
       <param name="superpoint_engine_path" value="$(arg superpoint_engine)"/>
       <param name="output_path" value="$(arg output_path)"/>
       <param name="include_keyframe_image" value="true"/>

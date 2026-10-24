@@ -1,0 +1,17 @@
+# 所有几何门限由每次 verify_loop 调用读取，可用 rosparam 明确修改。 (Ref: 2026-10-24_Portable_Loop_Core.md)
+matching:
+  ratio_threshold: 0.8
+  max_descriptor_distance: 0.9
+geometry:
+  min_matches: 8
+  min_inliers: 8
+  min_inlier_ratio: 0.5
+  ransac_iterations: 200
+  pnp_threshold_normalized: 0.004
+  min_second_singular_ratio: 0.001
+  min_positive_depth_fraction: 0.9
+  ransac_seed: 17
+covariance:
+  use_nominal: false
+  rotation_std: 0.03
+  translation_std: 0.10

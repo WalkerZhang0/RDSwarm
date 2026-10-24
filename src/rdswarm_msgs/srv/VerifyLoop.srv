@@ -1,0 +1,8 @@
+FrameKey local_key
+FrameKey remote_key
+bool publish_constraint
+---
+bool success
+string status
+LoopConstraint constraint
+VerifiedMatches correspondences

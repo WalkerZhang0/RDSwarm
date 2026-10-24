@@ -1,0 +1,8 @@
+FrameKey key
+bool publish_result
+---
+bool success
+string status
+uint32 feature_count
+uint32 valid_descriptor_count
+string local_descriptor_model

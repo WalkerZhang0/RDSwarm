@@ -41,14 +41,15 @@ show_track: 0           # publish tracking image as topic
 flow_back: 1            # perform forward and backward optical flow to improve feature tracking accuracy
 
 # SuperPoint feature detector. It only replaces new point detection; KLT still tracks features.
-use_superpoint: 1
-superpoint_backend: "tensorrt"
+use_superpoint: 0
+superpoint_backend: "opencv"
+superpoint_model_path: ""
 superpoint_engine_path: ""
 superpoint_score_threshold: 0.02
 superpoint_max_keypoints: 1024
 superpoint_border: 10
 
-# Feature frontend diagnostics. Run once with use_superpoint: 1 and once with 0, then compare CSV files.
+# Feature frontend diagnostics. Run once with use_superpoint: 0 and once with 0, then compare CSV files.
 feature_diagnostics: 0
 feature_diagnostics_path: ""
 

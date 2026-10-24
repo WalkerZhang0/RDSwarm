@@ -9,7 +9,8 @@
 struct SuperPointConfig
 {
     int enable = 0;
-    std::string backend = "tensorrt";
+    std::string backend = "opencv";
+    std::string model_path;
     std::string engine_path;
     double score_threshold = 0.02;
     int max_keypoints = 1024;

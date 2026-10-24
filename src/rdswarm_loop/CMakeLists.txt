@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(rdswarm_loop)
-find_package(catkin REQUIRED COMPONENTS roscpp rdswarm_core rdswarm_msgs)
-catkin_package(INCLUDE_DIRS include CATKIN_DEPENDS roscpp rdswarm_core rdswarm_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp rdswarm_core rdswarm_msgs cv_bridge rdswarm_features)
+find_package(OpenCV REQUIRED COMPONENTS core calib3d features2d)
+find_package(Eigen3 REQUIRED)
+catkin_package(INCLUDE_DIRS include LIBRARIES rdswarm_loop_core rdswarm_keyframe_store CATKIN_DEPENDS roscpp rdswarm_core rdswarm_msgs cv_bridge rdswarm_features)
 add_library(rdswarm_keyframe_store src/keyframe_store.cpp)
 target_compile_features(rdswarm_keyframe_store PUBLIC cxx_std_17)
 target_include_directories(rdswarm_keyframe_store PUBLIC include ${catkin_INCLUDE_DIRS})
@@ -15,3 +17,26 @@ install(TARGETS rdswarm_keyframe_store rdswarm_loop_input_node
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(DIRECTORY include/ DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
+
+add_library(rdswarm_loop_core src/loop_core.cpp)
+target_compile_features(rdswarm_loop_core PUBLIC cxx_std_17)
+target_include_directories(rdswarm_loop_core PUBLIC include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
+target_link_libraries(rdswarm_loop_core PUBLIC rdswarm_keyframe_store ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_dependencies(rdswarm_loop_core ${catkin_EXPORTED_TARGETS})
+add_executable(rdswarm_feature_node src/feature_node.cpp)
+target_link_libraries(rdswarm_feature_node rdswarm_loop_core ${catkin_LIBRARIES})
+add_dependencies(rdswarm_feature_node ${catkin_EXPORTED_TARGETS})
+add_executable(rdswarm_loop_node src/loop_node.cpp)
+target_link_libraries(rdswarm_loop_node rdswarm_loop_core)
+add_dependencies(rdswarm_loop_node ${catkin_EXPORTED_TARGETS})
+if(CATKIN_ENABLE_TESTING)
+  add_executable(loop_core_test test/loop_core_test.cpp)
+  target_link_libraries(loop_core_test rdswarm_loop_core)
+  add_test(NAME rdswarm_loop_geometry COMMAND $<TARGET_FILE:loop_core_test>)
+  add_dependencies(loop_core_test ${catkin_EXPORTED_TARGETS})
+endif()
+install(TARGETS rdswarm_loop_core rdswarm_feature_node rdswarm_loop_node
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

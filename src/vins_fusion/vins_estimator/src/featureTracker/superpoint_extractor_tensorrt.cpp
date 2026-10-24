@@ -1,4 +1,4 @@
-#include "superpoint_extractor.h"
+#include "superpoint_tensorrt.hpp"
 
 #include <NvInfer.h>
 #include <cuda_runtime_api.h>
@@ -444,7 +444,7 @@ private:
 
 }  // namespace
 
-class SuperPointExtractor::Impl
+class TensorRtDetector::Impl
 {
 public:
     bool init(const SuperPointConfig& config)
@@ -517,21 +517,21 @@ private:
     std::unique_ptr<SuperPointBackend> backend_;
 };
 
-SuperPointExtractor::SuperPointExtractor() : impl_(new Impl()) {}
+TensorRtDetector::TensorRtDetector() : impl_(new Impl()) {}
 
-SuperPointExtractor::~SuperPointExtractor() {}
+TensorRtDetector::~TensorRtDetector() {}
 
-bool SuperPointExtractor::init(const SuperPointConfig& config)
+bool TensorRtDetector::init(const SuperPointConfig& config)
 {
     return impl_->init(config);
 }
 
-bool SuperPointExtractor::isInitialized() const
+bool TensorRtDetector::isInitialized() const
 {
     return impl_->isInitialized();
 }
 
-bool SuperPointExtractor::detect(const cv::Mat& image,
+bool TensorRtDetector::detect(const cv::Mat& image,
                                  const cv::Mat& mask,
                                  int max_new_points,
                                  int min_dist,

@@ -1,0 +1,8 @@
+FrameKey key
+string service_name
+bool include_3d
+---
+bool success
+string status
+uint32 feature_count
+string local_descriptor_model

@@ -1,8 +1,8 @@
 /*******************************************************
  * Copyright (C) 2019, Aerial Robotics Group, Hong Kong University of Science and Technology
- * 
+ *
  * This file is part of VINS.
- * 
+ *
  * Licensed under the GNU General Public License v3.0;
  * you may not use this file except in compliance with the License.
  *******************************************************/
@@ -50,6 +50,7 @@ int FLOW_BACK;
 int USE_SUPERPOINT;
 std::string SUPERPOINT_BACKEND;
 std::string SUPERPOINT_ENGINE_PATH;
+std::string SUPERPOINT_MODEL_PATH;
 double SUPERPOINT_SCORE_THRESHOLD;
 int SUPERPOINT_MAX_KEYPOINTS;
 int SUPERPOINT_BORDER;
@@ -79,7 +80,7 @@ void readParameters(std::string config_file)
     if(fh == NULL){
         ROS_WARN("config_file dosen't exist; wrong config_file path");
         ROS_BREAK();
-        return;          
+        return;
     }
     fclose(fh);
 
@@ -98,9 +99,14 @@ void readParameters(std::string config_file)
     FLOW_BACK = fsSettings["flow_back"];
 
     USE_SUPERPOINT = fsSettings["use_superpoint"].empty() ? 0 : static_cast<int>(fsSettings["use_superpoint"]);
-    SUPERPOINT_BACKEND = "tensorrt";
+    ros::param::get("~use_superpoint", USE_SUPERPOINT);
+    SUPERPOINT_BACKEND = "opencv";
     if (!fsSettings["superpoint_backend"].empty())
         fsSettings["superpoint_backend"] >> SUPERPOINT_BACKEND;
+    ros::param::get("~superpoint_backend", SUPERPOINT_BACKEND);
+    SUPERPOINT_MODEL_PATH.clear();
+    if (!fsSettings["superpoint_model_path"].empty()) fsSettings["superpoint_model_path"] >> SUPERPOINT_MODEL_PATH;
+    ros::param::get("~superpoint_model_path", SUPERPOINT_MODEL_PATH);
     SUPERPOINT_ENGINE_PATH.clear();
     if (!fsSettings["superpoint_engine_path"].empty())
         fsSettings["superpoint_engine_path"] >> SUPERPOINT_ENGINE_PATH;
@@ -113,9 +119,15 @@ void readParameters(std::string config_file)
     if (!fsSettings["feature_diagnostics_path"].empty())
         fsSettings["feature_diagnostics_path"] >> FEATURE_DIAGNOSTICS_PATH;
 
-    // 正式运行 SuperPoint 时缺少 engine 应直接报错，不能静默换检测器污染对照。 (Ref: 2026-10-23_Init_RDSwarm_Framework.md)
-    if (USE_SUPERPOINT && SUPERPOINT_ENGINE_PATH.empty())
-        throw std::runtime_error("SuperPoint engine is required; set superpoint_engine_path launch argument");
+    // 显式选择的推理后端必须有对应模型，不能静默替换检测器。 (Ref: 2026-10-24_Portable_Loop_Core.md)
+    if (USE_SUPERPOINT && SUPERPOINT_BACKEND == "opencv" && SUPERPOINT_MODEL_PATH.empty())
+        throw std::runtime_error("OpenCV SuperPoint needs superpoint_model_path");
+    if (USE_SUPERPOINT && (SUPERPOINT_BACKEND == "tensorrt" || SUPERPOINT_BACKEND == "trt") && SUPERPOINT_ENGINE_PATH.empty())
+        throw std::runtime_error("TensorRT SuperPoint needs superpoint_engine_path");
+#ifndef RDSWARM_WITH_TENSORRT
+    if (USE_SUPERPOINT && (SUPERPOINT_BACKEND == "tensorrt" || SUPERPOINT_BACKEND == "trt"))
+        throw std::runtime_error("TensorRT backend was not compiled; choose opencv or enable RDSWARM_WITH_TENSORRT");
+#endif
     MULTIPLE_THREAD = fsSettings["multiple_thread"];
 
     USE_IMU = fsSettings["imu"];
@@ -153,7 +165,7 @@ void readParameters(std::string config_file)
         TIC.push_back(Eigen::Vector3d::Zero());
         EX_CALIB_RESULT_PATH = OUTPUT_FOLDER + "/extrinsic_parameter.csv";
     }
-    else 
+    else
     {
         if ( ESTIMATE_EXTRINSIC == 1)
         {
@@ -169,8 +181,8 @@ void readParameters(std::string config_file)
         cv::cv2eigen(cv_T, T);
         RIC.push_back(T.block<3, 3>(0, 0));
         TIC.push_back(T.block<3, 1>(0, 3));
-    } 
-    
+    }
+
     NUM_OF_CAM = fsSettings["num_of_cam"];
     printf("camera number %d\n", NUM_OF_CAM);
 
@@ -184,13 +196,15 @@ void readParameters(std::string config_file)
     int pn = config_file.find_last_of('/');
     std::string configPath = config_file.substr(0, pn);
 
+    if (!SUPERPOINT_MODEL_PATH.empty() && SUPERPOINT_MODEL_PATH[0] != '/')
+        SUPERPOINT_MODEL_PATH = configPath + "/" + SUPERPOINT_MODEL_PATH;
     if (!SUPERPOINT_ENGINE_PATH.empty() && SUPERPOINT_ENGINE_PATH[0] != '/')
         SUPERPOINT_ENGINE_PATH = configPath + "/" + SUPERPOINT_ENGINE_PATH;
     if (!FEATURE_DIAGNOSTICS_PATH.empty() && FEATURE_DIAGNOSTICS_PATH[0] != '/')
         FEATURE_DIAGNOSTICS_PATH = configPath + "/" + FEATURE_DIAGNOSTICS_PATH;
     if (FEATURE_DIAGNOSTICS && FEATURE_DIAGNOSTICS_PATH.empty())
         FEATURE_DIAGNOSTICS_PATH = OUTPUT_FOLDER + "/feature_tracker_diagnostics.csv";
-    
+
     std::string cam0Calib;
     fsSettings["cam0_calib"] >> cam0Calib;
     std::string cam0Path = configPath + "/" + cam0Calib;
@@ -201,10 +215,10 @@ void readParameters(std::string config_file)
         STEREO = 1;
         std::string cam1Calib;
         fsSettings["cam1_calib"] >> cam1Calib;
-        std::string cam1Path = configPath + "/" + cam1Calib; 
+        std::string cam1Path = configPath + "/" + cam1Calib;
         //printf("%s cam1 path\n", cam1Path.c_str() );
         CAM_NAMES.push_back(cam1Path);
-        
+
         cv::Mat cv_T;
         fsSettings["body_T_cam1"] >> cv_T;
         Eigen::Matrix4d T;

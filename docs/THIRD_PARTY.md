@@ -13,3 +13,11 @@ package.xml 的 example.invalid 维护人地址是显式占位符，发布前由
 
 原工程只读，新代码和适配补丁只存在于 RDSwarm。
 远端初始化时 GitHub 要求认证，本地 origin 已关联给定地址，未执行 push。
+
+## 2026-10-24 当前变化
+
+原 TensorRT SuperPoint 检测器保留为可选插件；默认 CPU 无 CUDA/TensorRT/YOLO/Torch。
+CPU 特征推理和描述子采样为 RDSwarm 实现，没有从其他模型库复制代码。
+prepare_superpoint_dense.py 仅整理用户已有 ONNX 的计算图，权重不入库；
+JSON 记录来源哈希及采样约定，不改变权重许可证。
+当前运行与未完成范围见 LOOP_WORKFLOW.md，PHASE1/VALIDATION 为原阶段记录。

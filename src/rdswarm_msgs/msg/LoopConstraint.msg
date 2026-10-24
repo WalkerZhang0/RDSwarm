@@ -13,3 +13,5 @@ string covariance_source
 uint32 inlier_count
 float64 reprojection_error
 string[] source_observation_ids
+string reprojection_error_unit
+bool geometry_verified

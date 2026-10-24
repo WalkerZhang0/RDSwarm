@@ -1,0 +1,4 @@
+uint64 local_feature_id
+uint64 remote_feature_id
+float32 descriptor_distance
+bool inlier

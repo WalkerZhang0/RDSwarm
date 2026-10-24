@@ -13,10 +13,12 @@ import xmlrpc.client
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--port",type=int,default=11531)
+    parser.add_argument("--devel-space",type=Path,default=Path("devel"))
     parser.add_argument("--engine",type=Path,help="Also verify dual-agent startup/shutdown using an existing engine path; no inference.")
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
-    logdir=root/"logs"/"interface_smoke"
+    devel=args.devel_space if args.devel_space.is_absolute() else root/args.devel_space
+    logdir=root/"logs"/("interface_smoke_"+devel.name)
     logdir.mkdir(parents=True,exist_ok=True)
     env=os.environ.copy()
     env.pop("ROS_HOSTNAME",None)
@@ -48,7 +50,7 @@ def main():
         else:
             raise RuntimeError("isolated ROS master not ready")
         start("loop_inputs",[
-            str(root/"devel/lib/rdswarm_loop/rdswarm_loop_input_node"),
+            str(devel/"lib/rdswarm_loop/rdswarm_loop_input_node"),
             "__ns:=/smoke/agent0","keyframes:=/smoke/agent0/vins/keyframes"])
         if args.engine:
             if not args.engine.is_file(): raise RuntimeError("engine file does not exist")
@@ -72,12 +74,12 @@ def main():
             if code!=0: raise RuntimeError(f"dual-agent shutdown failed: {code}")
             result["dual_agent_startup_shutdown"]={"returncode":code,"nodes":sorted(expected),"inference_run":False}
         contract=subprocess.run(
-            [str(root/"devel/lib/rdswarm_backend/constraint_contract_test")],
+            [str(devel/"lib/rdswarm_backend/constraint_contract_test")],
             cwd=root,env=env,text=True,capture_output=True,timeout=20)
         result["backend_contract"]={"returncode":contract.returncode,"output":contract.stdout+contract.stderr}
         if contract.returncode: raise RuntimeError("backend contract failed")
         frontend=subprocess.run(
-            [str(root/"devel/lib/vins/rdswarm_export_contract_fixture")],
+            [str(devel/"lib/vins/rdswarm_export_contract_fixture")],
             cwd=root,env=env,text=True,capture_output=True,timeout=30)
         result["frontend_export"]={"returncode":frontend.returncode,"output":frontend.stdout+frontend.stderr}
         if frontend.returncode: raise RuntimeError("native frontend export/cache fixture failed")

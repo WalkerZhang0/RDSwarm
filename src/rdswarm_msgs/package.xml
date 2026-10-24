@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rdswarm_msgs</name><version>0.1.0</version>
+  <name>rdswarm_msgs</name><version>0.2.0</version>
   <description>Native timestamped contracts for RDSwarm frontend, loop and backend.</description>
   <maintainer email="maintainers@example.invalid">RDSwarm maintainers</maintainer>
   <license>GPL-3.0-only</license>

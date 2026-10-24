@@ -1,0 +1,8 @@
+FrameKey query_key
+uint32 max_candidates
+bool inter_agent_only
+float64 min_time_separation
+---
+bool success
+string status
+LoopCandidate[] candidates
