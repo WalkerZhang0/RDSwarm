@@ -52,6 +52,7 @@ extern int NUM_OF_CAM;
 extern int STEREO;
 extern int USE_IMU;
 extern int MULTIPLE_THREAD;
+extern int FRONTEND_FRAME_STRIDE;
 // pts_gt for debug purpose;
 extern map<int, Eigen::Vector3d> pts_gt;
 

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RDSwarm 研究路线 · 平台主线与观测耦合分支</title>
+<style>
+  :root{--ink:#18334b;--muted:#526779;--line:#d8e2eb;--blue:#285d8a;--purple:#69459b}
+  *{box-sizing:border-box}html,body{margin:0;height:100%}
+  body{font:15px/1.65 system-ui,-apple-system,"Noto Sans CJK SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#f3f6f9}
+  .app{height:100dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr)}
+  header{padding:16px 24px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px}
+  h1{font-size:22px;line-height:1.4;margin:0 0 4px}header p{font-size:13px;color:var(--muted);margin:0}
+  a{color:#235d91;text-underline-offset:3px}header a{white-space:nowrap}
+  .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 24px;background:white;border-bottom:1px solid var(--line)}
+  button{font:inherit;line-height:1.3;border:1px solid #bcccdc;border-radius:6px;background:white;padding:7px 12px;color:var(--ink);cursor:pointer}
+  button:hover{background:#edf4fb;border-color:var(--blue)}:focus-visible{outline:3px solid #7bb2e1;outline-offset:2px}
+  output{min-width:54px;text-align:center;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .tip{font-size:12px;color:var(--muted);margin-left:auto}
+  main{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 330px}
+  #canvas{overflow:auto;position:relative;cursor:grab;background:#f7f9fc;touch-action:pan-x pan-y;overscroll-behavior:contain}
+  #canvas.dragging{cursor:grabbing;user-select:none}#diagram{display:block;width:1680px;height:1470px;max-width:none}
+  aside{overflow:auto;border-left:1px solid var(--line);padding:22px 22px 40px;background:white}
+  aside .eyebrow{font-size:12px;color:var(--muted);letter-spacing:.08em}aside h2{font-size:20px;line-height:1.5;margin:8px 0 12px}
+  aside p{margin:0 0 15px}aside ul{padding-left:21px;margin:12px 0 22px}aside li{margin-bottom:9px}
+  .status{display:inline-block;font-size:12px;padding:2px 9px;border-radius:4px;background:#edf3f9;color:#285d8a;margin-bottom:15px}
+  .note{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  .noscript{padding:24px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  @media(max-width:880px){header{padding:12px 16px}header h1{font-size:19px}main{grid-template-columns:minmax(0,1fr)}aside{display:none}.toolbar{padding:9px 12px}.tip{display:none}}
+  @media print{.app{height:auto;display:block}header,.toolbar,aside{display:none}main{display:block}#canvas{overflow:visible}#diagram{width:100%!important;height:auto!important}@page{size:A3 portrait;margin:10mm}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><h1>RDSwarm 研究路线</h1><p>先完善可验证算法平台；同步记录观测耦合，在协方差调度前完成可信度评估。更新：2026-10-28</p></div>
+    <a href="观测耦合.md">阅读背景与决策文档 ↗</a>
+  </header>
+  <nav class="toolbar" aria-label="路线图视图控制">
+    <button id="out" aria-label="缩小">−</button><output id="zoom" aria-live="polite">100%</output><button id="in" aria-label="放大">+</button>
+    <button id="actual">100%</button><button id="overview">全图</button><button id="main-focus">主线</button><button id="branch-focus">耦合分支</button><button id="gate-focus">调度前验收</button><button id="export">导出 SVG</button>
+    <span class="tip">默认原尺寸 · 滚动查看 · 拖拽平移 · Ctrl/⌘＋滚轮缩放 · 点击节点看说明</span>
+  </nav>
+  <main>
+    <div id="canvas" tabindex="0" aria-label="可缩放研究路线图，使用滚动条查看完整内容">
+      <svg id="diagram" xmlns="http://www.w3.org/2000/svg" width="1680" height="1470" viewBox="0 0 1680 1470" role="img" aria-labelledby="svg-title svg-description">
+        <title id="svg-title">RDSwarm 平台主线与观测耦合研究分支</title>
+        <desc id="svg-description">主线从现有 VIO 和局部回环测试，经全局检索、自动几何验证、GTSAM 与长序列评估，进入协方差调度。分支从共享观测分析，经噪声校准和联合协方差查询，在调度前独立验证环节汇合。箭头表示研究依赖，节点文字标注当前实现状态。</desc>
+        <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="context-stroke"/></marker></defs>
+        <style>
+          text{font-family:system-ui,-apple-system,'Noto Sans CJK SC','Microsoft YaHei',sans-serif;fill:#18334b}
+          .lane{fill:white;stroke:#d8e2eb;stroke-width:1.5}.lane-title{font-size:26px;font-weight:700}.lane-sub{font-size:17px;fill:#526779}
+          .edge{fill:none;stroke:#426989;stroke-width:2.8;marker-end:url(#arrow)}.dependency{stroke:#7955a5;stroke-dasharray:7 6}
+          .edge-label{font-size:16px;fill:#69459b}.box{stroke-width:2;rx:10}.done .box{fill:#edf7f2;stroke:#27735b}.pending .box{fill:#edf4fb;stroke:#326c9e;stroke-dasharray:8 5}.research .box{fill:#f4eefb;stroke:#7955a5;stroke-dasharray:8 5}.gate .box{fill:#fff6df;stroke:#a47622;stroke-width:2.5}
+          .card{cursor:pointer}.card:focus{outline:none}.card:focus .box,.card:hover .box{stroke-width:3.5}.card.selected .box{stroke-width:3.5;stroke:#163d61}
+          .node-title{font-size:24px;font-weight:700}.node-line{font-size:19px;fill:#40576c}.badge{font-size:15px;font-weight:600}.node-number{font-size:16px;font-weight:700;fill:#526779}.figure-note{font-size:17px;fill:#526779}.legend{font-size:16px;fill:#526779}
+        </style>
+        <rect width="1680" height="1470" fill="#f7f9fc"/>
+        <text x="60" y="48" class="figure-note">研究依赖图 · 箭头表示推进关系；实现状态以节点标签为准 · 点击节点查看验证条件</text>
+        <rect x="40" y="85" width="820" height="960" rx="15" class="lane"/>
+        <rect x="920" y="445" width="720" height="600" rx="15" class="lane"/>
+        <text x="66" y="125" class="lane-title">主线｜可验证算法平台</text>
+        <text x="66" y="151" class="lane-sub">当前优先：全局检索＋SP/BF/PnP 长序列基线</text>
+        <text x="946" y="485" class="lane-title">分支｜观测耦合与协方差可信度</text>
+        <text x="946" y="511" class="lane-sub">现在记录来源；逐步校准；调度前汇合验收</text>
+        <g id="edges">
+          <path d="M450 310V350" class="edge"/><path d="M450 490V530" class="edge"/>
+          <path d="M450 670V710" class="edge"/><path d="M450 850V890" class="edge"/>
+          <path d="M1280 670V710" class="edge dependency"/><path d="M1280 850V890" class="edge dependency"/>
+          <path d="M830 600H950" class="edge dependency"/>
+          <text x="866" y="580" class="edge-label">共享</text><text x="866" y="627" class="edge-label">来源</text>
+          <path d="M830 780H950" class="edge dependency"/>
+          <text x="866" y="759" class="edge-label">图内</text><text x="866" y="807" class="edge-label">联合块</text>
+          <path d="M450 1030V1085" class="edge"/><path d="M1280 1030V1085" class="edge dependency"/>
+          <path d="M840 1215V1265" class="edge"/>
+        </g>
+        <g id="cards"/>
+        <text x="60" y="1445" class="legend">实框：已有基础 / 必须验收　　虚框：待实现或待研究　　蓝色：平台主线　　紫色：耦合分支　　金色：进入调度前的验证条件</text>
+      </svg>
+      <noscript><p class="noscript">本页需开启 JavaScript 展示流程节点；完整文字路线见 <a href="观测耦合.md">观测耦合.md</a>。</p></noscript>
+    </div>
+    <aside aria-live="polite">
+      <span class="eyebrow">节点说明 / RESEARCH NOTES</span><h2 id="detail-title">先把平台做成可验证的实验对象</h2>
+      <span id="detail-status" class="status">主线与分支共同推进</span>
+      <p id="detail-body">已有单帧和服务链测试是起点。后续全局检索、长期编排和 GTSAM 仍需实现；图中不将它们标成已完成。</p>
+      <ul id="detail-list"><li>点击任意节点查看输入、工作内容和完成条件。</li><li>默认 100% 显示，避免整张图缩小后文字难辨。</li><li>“全图”查看依赖，“主线 / 耦合分支”查看局部。</li></ul>
+      <p class="note">模型给出的协方差稳定或下降，不代表实际误差被正确评估。独立参考、噪声敏感性和收益排序验证是进入调度实验前的必要检查。</p>
+      <a href="观测耦合.md">背景、公式与决策记录 ↗</a>
+    </aside>
+  </main>
+</div>
+<script>
+(() => {
+  'use strict';
+  const nodes = [
+    {id:'baseline',kind:'done',tag:'已有基础 · 少量帧对验证',x:70,y:170,w:760,h:140,n:'01',title:'固定 VIO 与局部特征基线',lines:['原生关键帧 / feature_id / 相机系三维点 / SP 描述子','明确检测模式、模型、标定、采样时间与数据范围'],body:'当前默认 VIO 为 Shi-Tomasi＋KLT；可选 SP 检测补新点。回环描述节点采样 SP 描述子并追加无深度二维点。',items:['固定前端模式和参数，避免将检测器变化混入调度效果。','保存关键帧及原始观测身份，确保二维、三维和描述子对应。','已有基础可继续开发，不代表长序列自动回环已经通过。']},
+    {id:'retrieval',kind:'done',tag:'已接入 · 4096-D ONNX CPU / 40s 基线',x:70,y:350,w:760,h:140,n:'02',title:'回环侧 MobileNetVLAD 全局检索',lines:['VIO 关键帧触发 → 异步全局描述 → 摘要交换 → Top-K','长期无关键帧时：普通帧按采样时间阈值搜索'],body:'已复用本地 D2SLAM MobileNetVLAD ONNX，核验 0–255 灰度 NHWC 输入与 4096-D 输出。独立 CPU worker 接入摘要和 Top-K；模型原训练过程尚未独立溯源。',items:['40 秒记录：112 关键帧，318 对候选，95 对通过 BF/PnP 几何。','几何接受不等于真回环；有限 GT 长度差中位约 0.92 m。','精确帧身份、磁盘历史和异步阶段日志已实现。','超时普通帧只搜索，不生成正式位姿约束。完整运行说明见 GLOBAL_LOOP_BASELINE.md。']},
+    {id:'geometry',kind:'pending',tag:'几何核已有 · 长期编排待完成',x:70,y:530,w:760,h:140,n:'03',title:'自动候选验证：SP＋BF＋PnP',lines:['按需描述 / 邻机特征请求 → 匹配 → 几何验收','记录成功、拒绝、超时、重复与信息来源'],body:'先使用 BF ratio＋互检作为固定局部匹配基线。PnP 消费本机 VIO 三维点和邻机二维点，因此误差可能与两端 VIO 信息相关。',items:['打通候选、描述、请求和验证流程，记录每阶段失败原因。','全局检索发现候选；局部匹配器改变的是候选的验证结果。','小重投影误差不能代替外部位姿精度评估。','保留 LightGlue 离线探针，待基线稳定后做单变量对照。']},
+    {id:'backend',kind:'pending',tag:'当前仅契约 · 优化器待实现',x:70,y:710,w:760,h:140,n:'04',title:'GTSAM 状态融合与可追溯查询',lines:['VIO 运动因子＋回环 → 增量求解 → 目标状态联合块','固定 gauge / 记录噪声来源 / 管理因子版本和去重'],body:'每台机器维护给定本机已接收信息的后端。先实现可查询、可审计的图模型，再验证其协方差含义。',items:['iSAM2、因子接入和相对状态查询尚待实现。','断开图中的跨机相对状态不应返回伪有限协方差。','联合边缘块包含图内状态相关性，不会自动恢复新测量与先验的相关性。','同源 PnP 与原始重投影观测不能按两份独立信息重复加入。']},
+    {id:'sequence',kind:'pending',tag:'待验证 · 先统计再评价收益',x:70,y:890,w:760,h:140,n:'05',title:'长序列观测与估计基线',lines:['检索候选 / 几何通过 / 重访事件 / 误差 / 时间 / 字节','有界工作集＋历史可查询性＋可复现日志'],body:'先得到自动长期运行的实测结果，区分检索候选、几何接受和外部确认的回环。阶段性检索/几何统计可在后端完成前开展。',items:['报告候选级与事件级统计，避免相邻帧重复放大回环数量。','队列丢弃、缓存失效和预算限制均记录；不能把漏处理当算法拒绝。','本地 S3E 导出 GT 姿态不可用，当前只支持有限位置指标。','位置近邻不是完整共视标签；GT 不进入在线搜索或选择。']},
+    {id:'provenance',kind:'research',tag:'现在启动 · 明确共享信息',x:950,y:530,w:660,h:140,n:'A',title:'梳理观测依赖与来源',lines:['VIO 地图点 / 邻机像素 / 相邻回环共享轨迹','记录观测 ID、时间、标定、三维点来源'],body:'单目 PnP 提供新的机间信息，同时继承 VIO 地图点误差。重新提取同一图像的特征或冻结三维点都不自动消除相关性。',items:['区分状态交叉相关、新测量与先验相关、多回环共享相关。','保留 source_observation_ids，并补充地图点来源轨迹的依赖记录。','避免融合转发后的重复测量或未经处理的邻机后验。','MSCKF 零空间投影消除地标增量，并不自动消除所有相关性。']},
+    {id:'noise',kind:'research',tag:'先近似 · 再校准与敏感性分析',x:950,y:710,w:660,h:140,n:'B',title:'噪声模型与联合协方差',lines:['暂定 R_loop / VIO 增量噪声 → 独立数据校准','目标联合块 → Pose3 Jacobian → 相对协方差'],body:'首版允许明确标注的松耦合近似。联合状态协方差与测量误差相关性分别处理，避免用一个查询接口混淆两者。',items:['人为名义噪声不能标为已经校准或从 PnP 精确估计。','在一致的切空间中传播 P_rel ≈ J P_joint Jᵀ。','分析三维点误差、VIO 时间相关和共享轨迹对收益的影响。','鲁棒核用于外点；加大噪声仍需检验，不能保证统计一致性。']},
+    {id:'validation',kind:'research',tag:'待验证 · 依据证据决定建模深度',x:950,y:890,w:660,h:140,n:'C',title:'实际误差与不确定性对照',lines:['覆盖率 / 完整参考下的一致性 / 预期收益排序','若近似不足：联合地标、消元因子或保守融合'],body:'检验协方差是否能支持调度，而不是只观察矩阵是否数值稳定。完整六维验证需要可靠姿态、时间和参考点外参。',items:['合成数据先核验公式与坐标；独立真实数据评估适用性。','校准数据与最终评价数据分开，记录误差定义和参考坐标。','检验噪声变化与观测共享程度下的调度排序稳定性。','若近似不支持研究结论，再深入联合建模和边缘化信息传递。']},
+    {id:'gate',kind:'gate',tag:'共同验收 · 可运行与可信度均需证据',x:70,y:1085,w:1540,h:130,n:'验收',title:'进入协方差驱动调度实验之前',lines:['平台可复现运行；误差参考与指标有效；噪声假设可追溯；收益排序经检验','协方差稳定或下降不能单独作为验收证据；数据不足时明确缩小结论范围'],body:'主线和耦合分支在此汇合。平台完成后仍须检验概率模型是否适合所研究的调度目标。',items:['核验运动和视觉观测的依赖关系、因子来源与重复接入。','独立验证实际误差、不确定性与调度收益之间的对应。','比较各策略自己的信息集和后验，避免使用全量方案状态代替。','当前 S3E 位置指标不足以验证完整六维一致性，需补充参考。']},
+    {id:'scheduling',kind:'pending',tag:'后续主研究 · 基线与近似模型通过验证后',x:70,y:1265,w:1540,h:130,n:'06',title:'协方差感知调度与资源—精度对照',lines:['全量 / 固定预算 / 状态感知：各自维护后端，真实执行检索、请求和验证动作','联合相对不确定性＋候选噪声＋计算通信成本 → 决策 → 长序列验证'],body:'研究给定每个节点实际可获得信息时的资源与估计质量关系，逐步验证经验收益；严格保证需要额外建模依据。',items:['报告定位质量、资源消耗、有效回环覆盖和失效情形。','候选尚未验证时，应考虑成功概率，不能假定必然加入有效信息。','候选噪声和后验不确定性取自同一时间版本，避免未来数据泄漏。','LightGlue 后续作为局部匹配对照，评价几何通过数、误差与成本。']}
+  ];
+  const svg=document.getElementById('diagram'), cards=document.getElementById('cards');
+  const ns='http://www.w3.org/2000/svg';
+  function element(tag,attrs,text){const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
+  function select(node){
+    for(const c of cards.children)c.classList.toggle('selected',c.id===node.id);
+    document.getElementById('detail-title').textContent=node.title;
+    document.getElementById('detail-status').textContent=node.tag;
+    document.getElementById('detail-body').textContent=node.body;
+    const list=document.getElementById('detail-list');list.replaceChildren();
+    for(const t of node.items){const li=document.createElement('li');li.textContent=t;list.append(li);}
+  }
+  for(const node of nodes){
+    const g=element('g',{id:node.id,class:`card ${node.kind}`,transform:`translate(${node.x},${node.y})`,tabindex:'0',role:'button','aria-label':`${node.title}。${node.tag}。查看说明`});
+    g.append(element('rect',{width:node.w,height:node.h,class:'box'}));
+    g.append(element('text',{x:22,y:28,class:'node-number'},node.n));
+    g.append(element('text',{x:75,y:28,class:'badge'},node.tag));
+    g.append(element('text',{x:22,y:64,class:'node-title'},node.title));
+    node.lines.forEach((line,i)=>g.append(element('text',{x:22,y:96+i*26,class:'node-line'},line)));
+    g.append(element('title',{},node.body));g.addEventListener('click',()=>select(node));
+    g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(node);}});cards.append(g);
+  }
+  const canvas=document.getElementById('canvas'),output=document.getElementById('zoom');
+  const W=1680,H=1470;let scale=1,drag=null;
+  // 缩放前保存锚点对应的图内坐标，保持鼠标或视口中心位置连续。 (Ref: 2026-10-28_Document_Research_Roadmap.md)
+  function zoom(next,anchorX=canvas.clientWidth/2,anchorY=canvas.clientHeight/2){
+    next=Math.max(.2,Math.min(2.5,next));
+    const worldX=(canvas.scrollLeft+anchorX)/scale,worldY=(canvas.scrollTop+anchorY)/scale;
+    scale=next;svg.style.width=`${W*scale}px`;svg.style.height=`${H*scale}px`;
+    canvas.scrollLeft=worldX*scale-anchorX;canvas.scrollTop=worldY*scale-anchorY;output.value=`${Math.round(scale*100)}%`;
+  }
+  function focusBox(x,y,w,h){const s=Math.min((canvas.clientWidth-30)/w,(canvas.clientHeight-30)/h,1.4);zoom(s,0,0);canvas.scrollLeft=x*scale;canvas.scrollTop=y*scale;}
+  document.getElementById('in').addEventListener('click',()=>zoom(scale*1.2));document.getElementById('out').addEventListener('click',()=>zoom(scale/1.2));
+  document.getElementById('actual').addEventListener('click',()=>zoom(1));
+  document.getElementById('overview').addEventListener('click',()=>focusBox(0,0,W,H));
+  document.getElementById('main-focus').addEventListener('click',()=>focusBox(35,80,835,980));
+  document.getElementById('branch-focus').addEventListener('click',()=>focusBox(915,440,730,610));
+  document.getElementById('gate-focus').addEventListener('click',()=>focusBox(60,1075,1560,340));
+  canvas.addEventListener('wheel',e=>{if(!(e.ctrlKey||e.metaKey))return;e.preventDefault();const r=canvas.getBoundingClientRect();zoom(scale*Math.exp(-e.deltaY*.003),e.clientX-r.left,e.clientY-r.top);},{passive:false});
+  canvas.addEventListener('pointerdown',e=>{if(e.button!==0||e.pointerType==='touch')return;drag={x:e.clientX,y:e.clientY,left:canvas.scrollLeft,top:canvas.scrollTop,moved:false};});
+  window.addEventListener('pointermove',e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>4)drag.moved=true;if(drag.moved){canvas.classList.add('dragging');canvas.scrollLeft=drag.left-(e.clientX-drag.x);canvas.scrollTop=drag.top-(e.clientY-drag.y);}});
+  canvas.addEventListener('click',e=>{if(drag?.moved){e.preventDefault();e.stopImmediatePropagation();}},{capture:true});
+  window.addEventListener('pointerup',()=>{canvas.classList.remove('dragging');setTimeout(()=>{drag=null;},0);});window.addEventListener('pointercancel',()=>{drag=null;canvas.classList.remove('dragging');});
+  canvas.addEventListener('keydown',e=>{if(e.target!==canvas)return;if(e.key==='+'||e.key==='='){e.preventDefault();zoom(scale*1.2);}else if(e.key==='-'){e.preventDefault();zoom(scale/1.2);}else if(e.key==='0'){e.preventDefault();zoom(1);}});
+  document.getElementById('export').addEventListener('click',()=>{
+    const copy=svg.cloneNode(true);copy.removeAttribute('style');copy.setAttribute('width',W);copy.setAttribute('height',H);
+    const blob=new Blob([new XMLSerializer().serializeToString(copy)],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='RDSwarm_研究路线.svg';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
+  });
+  select(nodes[1]);
+})();
+</script>
+</body>
+</html>

@@ -10,6 +10,7 @@
  *******************************************************/
 
 #include "feature_tracker.h"
+#include <iomanip>
 
 bool FeatureTracker::inBorder(const cv::Point2f &pt)
 {
@@ -670,7 +671,7 @@ void FeatureTracker::writeFeatureDiagnostics(double total_ms,
 
     feature_diagnostics_file
         << feature_frame_index++ << ","
-        << cur_time << ","
+        << std::setprecision(17) << cur_time << ","
         << detector_name << ","
         << prev_cnt << ","
         << lk_cnt << ","

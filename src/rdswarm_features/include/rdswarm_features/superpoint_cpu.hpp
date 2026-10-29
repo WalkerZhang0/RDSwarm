@@ -12,6 +12,8 @@ struct DenseSuperPoint {
 struct DetectorOptions {
   float score_threshold=0.02f;
   int max_points=1024,min_distance=8,border=8;
+  // 非零时按网格轮询高分候选；默认 0 保持 VINS 前端原有全局 NMS 行为。
+  int grid_rows=0,grid_cols=0;
 };
 // 对指定 VIO 像素采样，不通过另一组检测点序号关联三维点。 (Ref: 2026-10-24_Portable_Loop_Core.md)
 bool sampleSuperPointDescriptors(const cv::Mat& dense,cv::Size original_size,

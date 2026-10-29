@@ -1,0 +1,18 @@
+<launch>
+  <arg name="agent_id" default="0"/>
+  <arg name="output_directory" default="$(find rdswarm_bringup)/../../results/global_loop/agent$(arg agent_id)/baseline"/>
+  <arg name="summaries_topic" default="/rdswarm/summaries"/>
+  <arg name="top_k" default="3"/><arg name="min_similarity" default="-1.0"/>
+  <arg name="publish_constraint" default="true"/>
+  <group ns="agent$(arg agent_id)">
+    <node pkg="rdswarm_loop" type="loop_baseline_node.py" name="loop_baseline" output="screen">
+      <param name="agent_id" type="int" value="$(arg agent_id)"/>
+      <param name="output_directory" value="$(arg output_directory)"/>
+      <param name="top_k" type="int" value="$(arg top_k)"/>
+      <param name="min_similarity" type="double" value="$(arg min_similarity)"/>
+      <param name="publish_constraint" type="bool" value="$(arg publish_constraint)"/>
+      <rosparam param="agent_namespaces">{'0': '/agent0', '1': '/agent1'}</rosparam>
+      <remap from="summaries_in" to="$(arg summaries_topic)"/>
+    </node>
+  </group>
+</launch>

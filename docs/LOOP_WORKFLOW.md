@@ -1,6 +1,11 @@
 # 回环工作流程：逐项运行与调参
 
+2026-10-28：新增独立 MobileNetVLAD ONNX CPU 和自动 BF/PnP 基线，入口见 [GLOBAL_LOOP_BASELINE.md](GLOBAL_LOOP_BASELINE.md)。下文保留显式服务操作流程；关于全局模型“未接入”的描述为此前阶段记录。
+
 日期：2026-10-24。本文是当前操作入口。PHASE1.md/VALIDATION.md 保留为上一阶段历史记录。
+
+S3E Alpha/Carol 的真实关键帧、独立 launch 和手动调用实例见 [S3E 机间几何验证](S3E_INTER_AGENT_LOOP.md)。
+2026-10-25 更新：邻机二维不再依赖深度，描述节点默认保留原点并追加去重 SP 点，当前参数及回归结果见 [邻机二维候选](PEER_2D_FEATURES.md)。
 
 ## 1. 当前做到了哪里
 
@@ -123,10 +128,13 @@ rosrun rdswarm_loop rdswarm_feature_node \
   __ns:=/agent0 __name:=features \
   keyframes_in:=vins/keyframes \
   _model_path:="$PWD/models/superpoint_dense.onnx" \
+  _camera_calib_file:="$PWD/src/rdswarm_bringup/config/s3e/alpha_cam0.yaml" \
+  _append_image_features:=true \
   _auto_describe:=false
 ~~~
 
-agent1 将 namespace 换为 /agent1。
+agent1 将 namespace 换为 /agent1，S3E 相机标定改为 `src/rdswarm_bringup/config/s3e/carol_cam0.yaml`。
+其他数据必须使用对应的真实相机标定。也可分别使用 `describe_agent.launch agent_id:=0/1`，其 S3E 默认标定已配置。
 该节点默认只缓存原始关键帧，**不会自动运行描述子推理**。
 model_id 默认读取模型旁的 JSON；也可显式设置 _model_id。
 
@@ -160,7 +168,8 @@ rosservice call /agent1/describe_keyframe \
   "{key: {agent_id: 1, session_id: fixture, frame_id: 22}, publish_result: true}"
 ~~~
 
-发生：本机从原始图像为既有 feature_id 采样描述子，发布 /agentX/keyframes。
+发生：为既有 feature_id 采样描述子，并默认追加去重 SP 二维检测，发布 /agentX/keyframes。
+原有二维/三维/ID 保留；追加点没有有效三维。PnP 本机分支仍只选择有效三维点。
 不发生：全局检索、通信请求、PnP。
 服务响应只包含状态、特征数量和模型标识，便于检查。
 
@@ -264,6 +273,7 @@ rosparam set /agent0/loop_core/geometry/pnp_threshold_normalized 0.003
 
 参数优先级：显式 ROS 私有参数／launch 参数覆盖 VIO YAML；修改 YAML 后不要忘记对应 launch 默认值。
 model_path、model_id、auto_describe 和 VIO 检测器是启动参数，修改后应重启对应节点。
+二维补点的 `camera_calib_file/append_image_features/image_feature_max_points/image_feature_score_threshold/image_feature_min_distance/image_feature_border/dedup_radius_px` 同样在启动时读取，详见邻机二维候选说明。
 更换模型/采样约定时使用新 session 并重放输入，避免将同一帧缓存变成混合模型。
 当前缓存保留历史、原始图像占用 RAM；首次验证使用短片段，不声称已解决长期存储。
 

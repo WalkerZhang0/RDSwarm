@@ -1,0 +1,24 @@
+<launch>
+  <arg name="agent_id" default="0"/>
+  <arg name="agent_ns" default="agent$(arg agent_id)"/>
+  <arg name="model_path" default="$(find rdswarm_bringup)/../../models/mobilenetvlad.onnx"/>
+  <arg name="cache_directory" default="$(find rdswarm_bringup)/../../results/global_loop/$(arg agent_ns)/global"/>
+  <arg name="summaries_topic" default="/rdswarm/summaries"/>
+  <arg name="width" default="320"/><arg name="height" default="240"/>
+  <arg name="threads" default="2"/><arg name="max_pending" default="64"/>
+  <arg name="fallback_enabled" default="false"/><arg name="fallback_period_s" default="3.0"/>
+  <arg name="image_topic" default="/cam0/image_raw"/>
+  <group ns="$(arg agent_ns)">
+    <node pkg="rdswarm_loop" type="global_descriptor_node.py" name="global_descriptor" output="screen">
+      <param name="model_path" value="$(arg model_path)"/>
+      <param name="cache_directory" value="$(arg cache_directory)"/>
+      <param name="width" type="int" value="$(arg width)"/><param name="height" type="int" value="$(arg height)"/>
+      <param name="threads" type="int" value="$(arg threads)"/><param name="max_pending" type="int" value="$(arg max_pending)"/>
+      <param name="fallback_enabled" type="bool" value="$(arg fallback_enabled)"/>
+      <param name="fallback_period_s" type="double" value="$(arg fallback_period_s)"/>
+      <remap from="keyframes_in" to="vins/keyframes"/><remap from="summaries_out" to="$(arg summaries_topic)"/>
+      <remap from="summaries_in" to="$(arg summaries_topic)"/>
+      <remap from="states_in" to="vins/states"/><remap from="images_in" to="$(arg image_topic)"/>
+    </node>
+  </group>
+</launch>

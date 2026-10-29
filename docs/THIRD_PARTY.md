@@ -21,3 +21,12 @@ CPU 特征推理和描述子采样为 RDSwarm 实现，没有从其他模型库�
 prepare_superpoint_dense.py 仅整理用户已有 ONNX 的计算图，权重不入库；
 JSON 记录来源哈希及采样约定，不改变权重许可证。
 当前运行与未完成范围见 LOOP_WORKFLOW.md，PHASE1/VALIDATION 为原阶段记录。
+
+## 2026-10-28 MobileNetVLAD
+
+复用本地 D2SLAM 提供的 `models/netvlad_series/mobilenetvlad_dyn_size.onnx`，
+参考提交 `4c33871083e4ae97b97973eb5bd88dc6735359d7` 中 `mobilenetvlad_onnx.h` 的
+NHWC 灰度 float32 0–255 输入约定；未复制其推理实现。
+RDSwarm Python CPU 适配器为本轮新增代码。模型权重保存在忽略目录，不随仓库分发，
+不改变原模型许可。来源、SHA256、预处理及输出维数记录在本地模型 manifest；
+没有完成对其原训练 checkpoint、训练数据或训练性能的独立核验。

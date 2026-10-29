@@ -107,6 +107,8 @@ class Estimator
     queue<pair<double, Eigen::Vector3d>> gyrBuf;
     queue<pair<double, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1> > > > > > featureBuf;
     double prevTime, curTime;
+    double measurement_imu_wait_ms = 0.0;
+    double measurement_imu_max_step_ms = 0.0;
     bool openExEstimation;
 
     std::thread trackThread;

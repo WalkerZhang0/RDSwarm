@@ -49,6 +49,18 @@ int main(int argc, char** argv) {
     track.feature_per_frame.emplace_back(observation,0.0);
   }
   estimator.f_manager.feature.push_back(track);
+  // 未三角化、失败深度及当前帧新轨迹都应保留二维，不能给它们伪造三维。 (Ref: 2026-10-25_Extend_Peer_2D_Features.md)
+  for (int id : {18, 19, 20}) {
+    FeaturePerId incomplete(id, id == 18 ? k : 0);
+    incomplete.estimated_depth = id == 20 ? -1.0 : 2.0;
+    incomplete.solve_flag = id == 19 ? 2 : (id == 20 ? 1 : 0);
+    for (int i = incomplete.start_frame; i <= k; ++i) {
+      Eigen::Matrix<double,7,1> observation;
+      observation << 0.2,0.1,1.0,2.0,1.0,0.0,0.0;
+      incomplete.feature_per_frame.emplace_back(observation,0.0);
+    }
+    estimator.f_manager.feature.push_back(incomplete);
+  }
   cv::Mat image(4,6,CV_8UC1,cv::Scalar(42));
   if(!cacheRdswarmImage(header,image)) return 11;
   publishRdswarmKeyframe(estimator);
@@ -58,7 +70,7 @@ int main(int argc, char** argv) {
   }
   if(!received || received->header.stamp.toNSec()!=capture_ns ||
       received->key.frame_id!=capture_ns || !received->capture_stamp_exact ||
-      received->features.size()!=1 || !received->image_included) return 12;
+      received->features.size()!=4 || !received->image_included) return 12;
   const auto& f=received->features.front();
   // 该夹具只验证接口几何与时间戳，不代表真实 VIO 精度测试。 (Ref: 2026-10-23_Init_RDSwarm_Framework.md)
   if(f.feature_id!=17 || !f.position_valid || f.descriptor_valid ||
@@ -66,6 +78,13 @@ int main(int argc, char** argv) {
       std::abs(f.position_camera.y-0.1)>1e-10 ||
       std::abs(f.position_camera.z-2.0)>1e-10 ||
       received->image.header.stamp.toNSec()!=capture_ns) return 13;
+  for (std::size_t i=1;i<received->features.size();++i) {
+    const auto& incomplete=received->features[i];
+    if (incomplete.feature_id!=17+i || incomplete.position_valid ||
+        incomplete.normalized.z!=1.0 || std::abs(incomplete.normalized.x-0.2)>1e-6 ||
+        incomplete.position_camera.x!=0 || incomplete.position_camera.y!=0 || incomplete.position_camera.z!=0)
+      return 18;
+  }
   rdswarm_msgs::GetKeyframe service;
   service.request.key=received->key;
   service.request.include_image=false;
@@ -78,7 +97,7 @@ int main(int argc, char** argv) {
   }
   if(!cached || service.response.keyframe.image_included ||
       !service.response.keyframe.image.data.empty() ||
-      service.response.keyframe.features.size()!=1) return 14;
+      service.response.keyframe.features.size()!=4) return 14;
   resetRdswarmExport();
   if(!cacheRdswarmImage(header,image)) return 15;
   received.reset();
@@ -88,6 +107,6 @@ int main(int argc, char** argv) {
     ros::spinOnce(); ros::WallDuration(0.02).sleep();
   }
   if(!received || received->key.session_id!="contract_test.e1") return 16;
-  ROS_INFO("PASS: exact capture ns, camera-coordinate 3D, native IDs, invalid unknown noise/descriptor, cache service, reset epoch.");
+  ROS_INFO("PASS: exact capture ns, camera-coordinate 3D, immature/invalid-depth 2D observations, native IDs, cache service, reset epoch.");
   return 0;
 }

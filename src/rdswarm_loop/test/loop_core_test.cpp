@@ -57,6 +57,11 @@ int main() {
   if((t-truth.block<3,1>(0,3)).norm()>0.002 ||
      Eigen::AngleAxisd(estimated.toRotationMatrix()*truth.block<3,3>(0,0).transpose()).angle()>0.002 ||
      c.inlier_count<30 || c.covariance_valid || !c.geometry_verified || !matches.geometry_verified)return 2;
+  std::vector<rdswarm::ExternalMatch> supplied;
+  for(std::size_t i=0;i<a.features.size();++i)
+    supplied.push_back({i,i,0.95f});
+  if(!rdswarm::verifyLoopWithMatches(a,b,supplied,opts,c,matches,diag) ||
+     diag.matcher!="lightglue_onnx_cpu" || c.inlier_count<30 || !c.geometry_verified)return 10;
   auto wrong=b;wrong.local_descriptor_model="other_weights";
   if(rdswarm::verifyLoop(a,wrong,opts,c,matches,diag) || diag.status!="descriptor_model_mismatch")return 3;
   auto line=a;

@@ -10,6 +10,13 @@
 class LoopNode {
  public:
   LoopNode():private_("~") {
+    std::string cache_directory;int memory_frames=0;
+    private_.param<std::string>("cache_directory",cache_directory,"");
+    private_.param("memory_keyframes",memory_frames,0);
+    private_.param("remote_cache_limit",remote_cache_limit_,0);
+    if(remote_cache_limit_<0)throw std::runtime_error("invalid_remote_cache_limit");
+    if(memory_frames<0)throw std::runtime_error("invalid_memory_keyframes");
+    frames_.configureArchive(cache_directory,memory_frames);
     frames_sub_=nh_.subscribe("keyframes",30,&LoopNode::frame,this);
     summaries_sub_=nh_.subscribe("summaries",100,&LoopNode::summary,this);
     get_=nh_.advertiseService("get_local_features",&LoopNode::get,this);
@@ -23,7 +30,8 @@ class LoopNode {
  private:
   void frame(const rdswarm_msgs::KeyframeConstPtr& f) {
     std::string reason;
-    if(!frames_.insert(*f,reason) && reason!="duplicate_key")
+    auto compact=*f;compact.image=sensor_msgs::Image();compact.image_included=false;
+    if(!frames_.insert(compact,reason) && reason!="duplicate_key")
       ROS_WARN_STREAM("stage=enriched_input status="<<reason);
   }
   void summary(const rdswarm_msgs::KeyframeSummaryConstPtr& s) {
@@ -62,6 +70,11 @@ class LoopNode {
       res.status="peer_identity_or_payload_invalid";return true;
     }
     remote_[rdswarm::frameKey(req.key)]=call.response.packet;
+    while(remote_cache_limit_>0 && remote_.size()>static_cast<std::size_t>(remote_cache_limit_)) {
+      auto victim=remote_.begin();
+      if(victim->first==rdswarm::frameKey(req.key))++victim;
+      remote_.erase(victim);
+    }
     res.success=true;res.status="ok";res.feature_count=call.response.packet.features.size();
     res.local_descriptor_model=call.response.packet.local_descriptor_model;
     ROS_INFO_STREAM("stage=peer_cached frame="<<req.key.frame_id<<" count="<<res.feature_count);
@@ -113,8 +126,13 @@ class LoopNode {
       if(req.publish_constraint)loops_.publish(res.constraint);
     }
     ROS_INFO_STREAM("stage="<<diagnostics.stage<<" status="<<diagnostics.status
+      <<" matcher="<<diagnostics.matcher
       <<" matches="<<diagnostics.matches<<" inliers="<<diagnostics.inliers
-      <<" rms_normalized="<<diagnostics.rms_normalized<<" elapsed_ms="<<ms
+      <<" rms_normalized="<<diagnostics.rms_normalized
+      <<" matching_ms="<<diagnostics.matching_ms
+      <<" geometry_ms="<<diagnostics.geometry_ms
+      <<" total_ms="<<diagnostics.total_ms
+      <<" elapsed_ms="<<ms
       <<" publish_constraint="<<(res.success && req.publish_constraint));
     return true;
   }
@@ -125,6 +143,7 @@ class LoopNode {
   rdswarm::KeyframeStore frames_;
   std::map<rdswarm::FrameKey,rdswarm_msgs::LocalFeaturePacket> remote_;
   rdswarm::GlobalRetrievalIndex index_;
+  int remote_cache_limit_=0;
 };
 int main(int argc,char** argv) {
   ros::init(argc,argv,"rdswarm_loop");

@@ -24,6 +24,14 @@
       <param name="include_keyframe_image" value="true"/>
       <remap from="/cam0/image_raw" to="$(arg image_topic)"/>
       <remap from="/imu0" to="$(arg imu_topic)"/>
+      <!-- 隔离原版全局控制和特征入口，防止一次重启或外部输入影响两路 VINS。 (Ref: 2026-10-25_Add_S3E_Dual_VINS_Launch.md) -->
+      <remap from="/vins_restart" to="vins/restart"/>
+      <remap from="/vins_imu_switch" to="vins/imu_switch"/>
+      <remap from="/vins_cam_switch" to="vins/cam_switch"/>
+      <remap from="/feature_tracker/feature" to="vins/feature_input"/>
+      <!-- 原版 frame_id 固定为 world/body/camera，按设备隔离 TF 话题，RViz 订阅对应设备的 TF。 (Ref: 2026-10-25_Add_Manual_RViz.md) -->
+      <remap from="/tf" to="tf"/>
+      <remap from="/tf_static" to="tf_static"/>
     </node>
     <node if="$(arg cache_keyframes)" pkg="rdswarm_loop" type="rdswarm_loop_input_node"
           name="loop_inputs" output="screen">

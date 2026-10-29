@@ -38,6 +38,7 @@ int NUM_OF_CAM;
 int STEREO;
 int USE_IMU;
 int MULTIPLE_THREAD;
+int FRONTEND_FRAME_STRIDE;
 map<int, Eigen::Vector3d> pts_gt;
 std::string IMAGE0_TOPIC, IMAGE1_TOPIC;
 std::string FISHEYE_MASK;
@@ -115,9 +116,11 @@ void readParameters(std::string config_file)
     SUPERPOINT_MAX_KEYPOINTS = fsSettings["superpoint_max_keypoints"].empty() ? 1024 : static_cast<int>(fsSettings["superpoint_max_keypoints"]);
     SUPERPOINT_BORDER = fsSettings["superpoint_border"].empty() ? 10 : static_cast<int>(fsSettings["superpoint_border"]);
     FEATURE_DIAGNOSTICS = fsSettings["feature_diagnostics"].empty() ? 0 : static_cast<int>(fsSettings["feature_diagnostics"]);
+    ros::param::get("~feature_diagnostics", FEATURE_DIAGNOSTICS);
     FEATURE_DIAGNOSTICS_PATH.clear();
     if (!fsSettings["feature_diagnostics_path"].empty())
         fsSettings["feature_diagnostics_path"] >> FEATURE_DIAGNOSTICS_PATH;
+    ros::param::get("~feature_diagnostics_path", FEATURE_DIAGNOSTICS_PATH);
 
     // 显式选择的推理后端必须有对应模型，不能静默替换检测器。 (Ref: 2026-10-24_Portable_Loop_Core.md)
     if (USE_SUPERPOINT && SUPERPOINT_BACKEND == "opencv" && SUPERPOINT_MODEL_PATH.empty())
@@ -129,6 +132,13 @@ void readParameters(std::string config_file)
         throw std::runtime_error("TensorRT backend was not compiled; choose opencv or enable RDSWARM_WITH_TENSORRT");
 #endif
     MULTIPLE_THREAD = fsSettings["multiple_thread"];
+    // 抽帧与线程模式分开设置；默认保留旧多线程行为，1 表示每帧参与估计。 (Ref: 2026-10-25_Diagnose_Alpha_VIO.md)
+    FRONTEND_FRAME_STRIDE = fsSettings["frontend_frame_stride"].empty()
+        ? (MULTIPLE_THREAD ? 2 : 1) : static_cast<int>(fsSettings["frontend_frame_stride"]);
+    ros::param::get("~frontend_frame_stride", FRONTEND_FRAME_STRIDE);
+    if (FRONTEND_FRAME_STRIDE < 1)
+        throw std::runtime_error("frontend_frame_stride must be at least 1");
+    ROS_INFO("Visual estimation frame stride: %d", FRONTEND_FRAME_STRIDE);
 
     USE_IMU = fsSettings["imu"];
     printf("USE_IMU: %d\n", USE_IMU);

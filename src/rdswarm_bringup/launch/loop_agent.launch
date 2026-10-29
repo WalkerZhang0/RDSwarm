@@ -1,0 +1,19 @@
+<launch>
+  <arg name="agent_id" default="0"/>
+  <arg name="agent_ns" default="agent$(arg agent_id)"/>
+  <arg name="config_file" default="$(find rdswarm_loop)/config/loop.yaml"/>
+  <arg name="summaries_topic" default="summaries"/>
+  <arg name="cache_directory" default=""/>
+  <arg name="memory_keyframes" default="0"/>
+  <arg name="remote_cache_limit" default="0"/>
+  <group ns="$(arg agent_ns)">
+    <!-- 候选查询、特征请求和 PnP 由各自服务独立触发，不自动运行。 (Ref: 2026-10-25_Verify_S3E_InterAgent_Loop.md) -->
+    <node pkg="rdswarm_loop" type="rdswarm_loop_node" name="loop_core" output="screen">
+      <rosparam command="load" file="$(arg config_file)"/>
+      <param name="cache_directory" value="$(arg cache_directory)"/>
+      <param name="memory_keyframes" type="int" value="$(arg memory_keyframes)"/>
+      <param name="remote_cache_limit" type="int" value="$(arg remote_cache_limit)"/>
+      <remap from="summaries" to="$(arg summaries_topic)"/>
+    </node>
+  </group>
+</launch>

@@ -33,7 +33,7 @@ try:
  else:raise RuntimeError('master not ready')
  for i in [0,1]:
   ns=f'/phase2/agent{i}'
-  start(f'features{i}',[str(devel/'lib/rdswarm_loop/rdswarm_feature_node'),f'__ns:={ns}','__name:=features',f'_model_path:={args.model.resolve()}','_auto_describe:=false','keyframes_in:=vins/keyframes'])
+  start(f'features{i}',[str(devel/'lib/rdswarm_loop/rdswarm_feature_node'),f'__ns:={ns}','__name:=features',f'_model_path:={args.model.resolve()}','_auto_describe:=false','_append_image_features:=false','keyframes_in:=vins/keyframes'])
   start(f'loop{i}',[str(devel/'lib/rdswarm_loop/rdswarm_loop_node'),f'__ns:={ns}','__name:=loop_core'])
  import rospy
  from rdswarm_msgs.msg import Keyframe,FrameKey,KeyframeSummary,LoopConstraint

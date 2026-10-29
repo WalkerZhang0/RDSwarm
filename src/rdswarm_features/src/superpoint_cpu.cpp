@@ -117,7 +117,9 @@ bool SuperPointCpu::detect(const DenseSuperPoint& result,const cv::Mat& mask,
   if(result.scores.empty() || result.scores.type()!=CV_32F ||
      result.scores.size()!=result.image_size || !std::isfinite(opts.score_threshold) ||
      opts.score_threshold<0 || opts.score_threshold>1 ||
-     opts.max_points<0 || opts.min_distance<0 || opts.border<0 ||
+      opts.max_points<0 || opts.min_distance<0 || opts.border<0 ||
+      opts.grid_rows<0 || opts.grid_cols<0 ||
+      ((opts.grid_rows==0) != (opts.grid_cols==0)) ||
      (!mask.empty() && (mask.type()!=CV_8UC1 || mask.size()!=result.image_size))) {
     reason="invalid_detector_input"; return false;
   }
@@ -134,11 +136,42 @@ bool SuperPointCpu::detect(const DenseSuperPoint& result,const cv::Mat& mask,
     if(a.score!=b.score) return a.score>b.score;
     return std::tie(a.y,a.x)<std::tie(b.y,b.x);
   });
-  for(const auto& c:candidates) {
-    if(points.size()>=static_cast<std::size_t>(opts.max_points)) break;
-    if(available.at<unsigned char>(c.y,c.x)) {
-      points.emplace_back(c.x,c.y);
-      cv::circle(available,cv::Point(c.x,c.y),opts.min_distance,cv::Scalar(0),-1);
+  if (opts.grid_rows > 0 && opts.grid_cols > 0) {
+    std::vector<std::vector<Candidate>> cells(static_cast<std::size_t>(opts.grid_rows*opts.grid_cols));
+    for (const auto& candidate : candidates) {
+      const int col=std::min(opts.grid_cols-1,
+          candidate.x*opts.grid_cols/std::max(1,result.scores.cols));
+      const int row=std::min(opts.grid_rows-1,
+          candidate.y*opts.grid_rows/std::max(1,result.scores.rows));
+      cells[static_cast<std::size_t>(row*opts.grid_cols+col)].push_back(candidate);
+    }
+    std::vector<std::size_t> next(cells.size(),0);
+    bool progress=true;
+    // 每轮从每个网格取一个候选，优先保证覆盖，再在预算内继续补高分点。
+    while (progress && points.size()<static_cast<std::size_t>(opts.max_points)) {
+      progress=false;
+      for (std::size_t cell_index=0; cell_index<cells.size(); ++cell_index) {
+        auto& cell=cells[cell_index];
+        while (next[cell_index]<cell.size() &&
+               !available.at<unsigned char>(cell[next[cell_index]].y,
+                                            cell[next[cell_index]].x))
+          ++next[cell_index];
+        if (next[cell_index]>=cell.size()) continue;
+        const auto candidate=cell[next[cell_index]++];
+        if (!available.at<unsigned char>(candidate.y,candidate.x)) continue;
+        points.emplace_back(candidate.x,candidate.y);
+        cv::circle(available,cv::Point(candidate.x,candidate.y),opts.min_distance,cv::Scalar(0),-1);
+        progress=true;
+        if (points.size()>=static_cast<std::size_t>(opts.max_points)) break;
+      }
+    }
+  } else {
+    for(const auto& c:candidates) {
+      if(points.size()>=static_cast<std::size_t>(opts.max_points)) break;
+      if(available.at<unsigned char>(c.y,c.x)) {
+        points.emplace_back(c.x,c.y);
+        cv::circle(available,cv::Point(c.x,c.y),opts.min_distance,cv::Scalar(0),-1);
+      }
     }
   }
   reason="ok"; return true;

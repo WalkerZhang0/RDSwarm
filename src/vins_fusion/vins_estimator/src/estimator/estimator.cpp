@@ -10,6 +10,7 @@
 #include "estimator.h"
 #include "../utility/rdswarm_export.h"
 #include "../utility/visualization.h"
+#include <iomanip>
 
 namespace
 {
@@ -60,6 +61,8 @@ void Estimator::clearState()
 
     prevTime = -1;
     curTime = 0;
+    measurement_imu_wait_ms = 0.0;
+    measurement_imu_max_step_ms = 0.0;
     openExEstimation = 0;
     initP = Eigen::Vector3d(0, 0, 0);
     initR = Eigen::Matrix3d::Identity();
@@ -197,20 +200,15 @@ void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
         pubTrackImage(imgTrack, t);
     }
     
-    if(MULTIPLE_THREAD)  
-    {     
-        if(inputImageCnt % 2 == 0)
-        {
-            mBuf.lock();
-            featureBuf.push(make_pair(t, featureFrame));
-            mBuf.unlock();
-        }
-    }
-    else
+    // 跟踪仍消费全部图像，只对进入估计器的帧进行显式抽样。 (Ref: 2026-10-25_Diagnose_Alpha_VIO.md)
+    if (inputImageCnt % FRONTEND_FRAME_STRIDE != 0)
+        return;
     {
-        mBuf.lock();
+        std::lock_guard<std::mutex> guard(mBuf);
         featureBuf.push(make_pair(t, featureFrame));
-        mBuf.unlock();
+    }
+    if (!MULTIPLE_THREAD)
+    {
         TicToc processTime;
         processMeasurements();
         printf("process time: %f\n", processTime.toc());
@@ -283,6 +281,7 @@ bool Estimator::getIMUInterval(double t0, double t1, vector<pair<double, Eigen::
 
 bool Estimator::IMUAvailable(double t)
 {
+    std::lock_guard<std::mutex> guard(mBuf);
     if(!accBuf.empty() && t <= accBuf.back().first)
         return true;
     else
@@ -296,17 +295,39 @@ void Estimator::processMeasurements()
         //printf("process measurments\n");
         pair<double, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1> > > > > feature;
         vector<pair<double, Eigen::Vector3d>> accVector, gyrVector;
-        if(!featureBuf.empty())
+        bool has_feature = false;
         {
-            feature = featureBuf.front();
+            std::lock_guard<std::mutex> guard(mBuf);
+            has_feature = !featureBuf.empty();
+            if (has_feature)
+                feature = featureBuf.front();
+        }
+        if(has_feature)
+        {
             curTime = feature.first + td;
+            measurement_imu_wait_ms = 0.0;
+            measurement_imu_max_step_ms = 0.0;
+            const auto imu_wait_start = std::chrono::steady_clock::now();
+            bool waited_for_imu = false;
             while(ros::ok())
             {
                 if ((!USE_IMU  || IMUAvailable(feature.first + td)))
                     break;
                 else
                 {
-                    printf("wait for imu ... \n");
+                    waited_for_imu = true;
+                    double imu_lag_ms = -1.0;
+                    {
+                        std::lock_guard<std::mutex> guard(mBuf);
+                        if (!accBuf.empty())
+                            imu_lag_ms = 1000.0 * (curTime - accBuf.back().first);
+                    }
+                    // 节流提示并记录墙钟等待时长与 IMU 覆盖差，避免 5 ms 刷屏。 (Ref: 2026-10-25_Diagnose_Alpha_VIO.md)
+                    const double waited_ms = std::chrono::duration<double, std::milli>(
+                        std::chrono::steady_clock::now() - imu_wait_start).count();
+                    ROS_WARN_STREAM_THROTTLE(2.0, "Waiting for IMU: image_t="
+                        << std::fixed << std::setprecision(6) << feature.first
+                        << " lag_ms=" << imu_lag_ms << " wait_ms=" << waited_ms);
                     if (! MULTIPLE_THREAD)
                         return;
                     std::chrono::milliseconds dura(5);
@@ -316,6 +337,9 @@ void Estimator::processMeasurements()
             // 停机时不能继续等待缺失 IMU，也不能消费未准备好的数据。 (Ref: 2026-10-23_Init_RDSwarm_Framework.md)
             if (!ros::ok())
                 return;
+            if (waited_for_imu)
+                measurement_imu_wait_ms = std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - imu_wait_start).count();
             mBuf.lock();
             if(USE_IMU)
                 getIMUInterval(prevTime, curTime, accVector, gyrVector);
@@ -336,6 +360,8 @@ void Estimator::processMeasurements()
                         dt = curTime - accVector[i - 1].first;
                     else
                         dt = accVector[i].first - accVector[i - 1].first;
+                    if (prevTime >= 0.0 || i > 0)
+                        measurement_imu_max_step_ms = std::max(measurement_imu_max_step_ms, 1000.0 * dt);
                     processIMU(accVector[i].first, dt, accVector[i].second, gyrVector[i].second);
                 }
             }
@@ -656,13 +682,14 @@ void Estimator::writeEstimatorDiagnostics(double timestamp,
         estimator_diagnostics_file
             << "frame_index,time,input_features,keyframe,marginalization,solver_before,solver_after,"
             << "window_frame_count,feature_count,last_track_num,long_track_num,new_feature_num,"
-            << "last_average_parallax_px,init_attempted,init_success,process_ms\n";
+            << "last_average_parallax_px,init_attempted,init_success,process_ms,"
+            << "velocity_norm,acc_bias_norm,gyro_bias_norm,td_s,imu_wait_ms,imu_max_step_ms\n";
         estimator_diagnostics_header_written = true;
     }
 
     estimator_diagnostics_file
         << estimator_diag_frame_index++ << ","
-        << timestamp << ","
+        << std::setprecision(17) << timestamp << ","
         << input_features << ","
         << (keyframe ? 1 : 0) << ","
         << (marginalization_flag == MARGIN_OLD ? "old" : "second_new") << ","
@@ -676,7 +703,13 @@ void Estimator::writeEstimatorDiagnostics(double timestamp,
         << f_manager.last_average_parallax << ","
         << (init_attempted ? 1 : 0) << ","
         << (init_success ? 1 : 0) << ","
-        << process_ms << "\n";
+        << process_ms << ","
+        << Vs[WINDOW_SIZE].norm() << ","
+        << Bas[WINDOW_SIZE].norm() << ","
+        << Bgs[WINDOW_SIZE].norm() << ","
+        << td << ","
+        << measurement_imu_wait_ms << ","
+        << measurement_imu_max_step_ms << "\n";
     estimator_diagnostics_file.flush();
 }
 

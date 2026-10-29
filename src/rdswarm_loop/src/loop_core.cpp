@@ -8,6 +8,7 @@
 #include <numeric>
 #include <set>
 #include <sstream>
+#include <chrono>
 namespace rdswarm {
 namespace {
 bool finitePose(const geometry_msgs::Transform& t) {
@@ -97,13 +98,26 @@ rdswarm_msgs::LocalFeaturePacket localPacket(const rdswarm_msgs::Keyframe& f,boo
   }
   return p;
 }
-bool verifyLoop(const rdswarm_msgs::LocalFeaturePacket& local,
+namespace {
+bool verifyLoopInternal(const rdswarm_msgs::LocalFeaturePacket& local,
     const rdswarm_msgs::LocalFeaturePacket& remote,const LoopOptions& opts,
+    const std::vector<ExternalMatch>* supplied_matches, const std::string& matcher_name,
     rdswarm_msgs::LoopConstraint& constraint,rdswarm_msgs::VerifiedMatches& match_set,
     LoopDiagnostics& diag) {
   constraint=rdswarm_msgs::LoopConstraint();match_set=rdswarm_msgs::VerifiedMatches();diag=LoopDiagnostics();
+  diag.matcher=matcher_name;
+  const auto total_start=std::chrono::steady_clock::now();
+  std::chrono::steady_clock::time_point geometry_start;
+  bool geometry_started=false;
   auto fail=[&](const std::string& stage,const std::string& status) {
-    diag.stage=stage;diag.status=status;return false;
+    diag.stage=stage;diag.status=status;
+    if (geometry_started) {
+      diag.geometry_ms=std::chrono::duration<double,std::milli>(
+          std::chrono::steady_clock::now()-geometry_start).count();
+    }
+    diag.total_ms=std::chrono::duration<double,std::milli>(
+        std::chrono::steady_clock::now()-total_start).count();
+    return false;
   };
   std::string reason;
   if(!optionsValid(opts))return fail("input","invalid_options");
@@ -127,28 +141,55 @@ bool verifyLoop(const rdswarm_msgs::LocalFeaturePacket& local,
     }
   }
   diag.local_features=local_ids.size();diag.remote_features=remote_ids.size();
-  if(ld.rows<opts.min_matches || rd.rows<2)return fail("match","insufficient_features");
-  cv::BFMatcher matcher(cv::NORM_L2);
-  std::vector<std::vector<cv::DMatch>> nearest;
-  std::vector<cv::DMatch> reverse;
-  matcher.knnMatch(ld,rd,nearest,2);matcher.match(rd,ld,reverse);
   std::vector<cv::Point3f> object;
   std::vector<cv::Point2f> image;
-  for(const auto& nn:nearest) {
-    if(nn.size()!=2 || nn[0].distance>=opts.ratio_threshold*nn[1].distance ||
-       nn[0].distance>opts.max_descriptor_distance ||
-       reverse[nn[0].trainIdx].trainIdx!=nn[0].queryIdx)continue;
-    const auto& a=local.features[local_ids[nn[0].queryIdx]];
-    const auto& b=remote.features[remote_ids[nn[0].trainIdx]];
-    object.emplace_back(a.position_camera.x,a.position_camera.y,a.position_camera.z);
-    image.emplace_back(b.normalized.x,b.normalized.y);
-    rdswarm_msgs::FeatureMatch match;
-    match.local_feature_id=a.feature_id;match.remote_feature_id=b.feature_id;
-    match.descriptor_distance=nn[0].distance;match_set.matches.push_back(match);
+  const auto matching_start=std::chrono::steady_clock::now();
+  if (supplied_matches) {
+    std::set<std::size_t> used_local,used_remote;
+    for (const auto& candidate : *supplied_matches) {
+      if (candidate.local_feature_index>=local.features.size() ||
+          candidate.remote_feature_index>=remote.features.size() ||
+          !used_local.insert(candidate.local_feature_index).second ||
+          !used_remote.insert(candidate.remote_feature_index).second ||
+          !std::isfinite(candidate.confidence) || candidate.confidence<=0.0f ||
+          candidate.confidence>1.0f) {
+        return fail("match","invalid_external_match");
+      }
+      const auto& a=local.features[candidate.local_feature_index];
+      const auto& b=remote.features[candidate.remote_feature_index];
+      if (!a.position_valid || !a.descriptor_valid || !b.descriptor_valid)
+        return fail("match","external_match_feature_invalid");
+      object.emplace_back(a.position_camera.x,a.position_camera.y,a.position_camera.z);
+      image.emplace_back(b.normalized.x,b.normalized.y);
+      rdswarm_msgs::FeatureMatch match;
+      match.local_feature_id=a.feature_id;match.remote_feature_id=b.feature_id;
+      match.descriptor_distance=1.0f-candidate.confidence;match_set.matches.push_back(match);
+    }
+  } else {
+    if(ld.rows<opts.min_matches || rd.rows<2)return fail("match","insufficient_features");
+    cv::BFMatcher matcher(cv::NORM_L2);
+    std::vector<std::vector<cv::DMatch>> nearest;
+    std::vector<cv::DMatch> reverse;
+    matcher.knnMatch(ld,rd,nearest,2);matcher.match(rd,ld,reverse);
+    for(const auto& nn:nearest) {
+      if(nn.size()!=2 || nn[0].distance>=opts.ratio_threshold*nn[1].distance ||
+         nn[0].distance>opts.max_descriptor_distance ||
+         reverse[nn[0].trainIdx].trainIdx!=nn[0].queryIdx)continue;
+      const auto& a=local.features[local_ids[nn[0].queryIdx]];
+      const auto& b=remote.features[remote_ids[nn[0].trainIdx]];
+      object.emplace_back(a.position_camera.x,a.position_camera.y,a.position_camera.z);
+      image.emplace_back(b.normalized.x,b.normalized.y);
+      rdswarm_msgs::FeatureMatch match;
+      match.local_feature_id=a.feature_id;match.remote_feature_id=b.feature_id;
+      match.descriptor_distance=nn[0].distance;match_set.matches.push_back(match);
+    }
   }
+  diag.matching_ms=std::chrono::duration<double,std::milli>(
+      std::chrono::steady_clock::now()-matching_start).count();
   diag.matches=object.size();
   if(object.size()<static_cast<std::size_t>(opts.min_matches))return fail("match","insufficient_matches");
   if(!geometricSpread(object,opts.min_second_singular_ratio))return fail("geometry","collinear_or_tiny_3d_geometry");
+  geometry_start=std::chrono::steady_clock::now(); geometry_started=true;
   cv::Mat r,t,inliers;
   try {
     // 使用归一化坐标时 K=I，RANSAC 门限也必须采用归一化单位。 (Ref: 2026-10-24_Portable_Loop_Core.md)
@@ -206,8 +247,26 @@ bool verifyLoop(const rdswarm_msgs::LocalFeaturePacket& local,
       constraint.source_observation_ids.push_back(sa+":"+std::to_string(match.local_feature_id));
       constraint.source_observation_ids.push_back(sb+":"+std::to_string(match.remote_feature_id));
     }
-    diag.stage="verified";diag.status="ok";return true;
+    diag.geometry_ms=std::chrono::duration<double,std::milli>(
+        std::chrono::steady_clock::now()-geometry_start).count();
+    diag.stage="verified";diag.status="ok";
+    diag.total_ms=std::chrono::duration<double,std::milli>(
+        std::chrono::steady_clock::now()-total_start).count();
+    return true;
   } catch(const cv::Exception& e) {return fail("pnp",e.what());}
+}
+}
+bool verifyLoop(const rdswarm_msgs::LocalFeaturePacket& local,
+    const rdswarm_msgs::LocalFeaturePacket& remote,const LoopOptions& opts,
+    rdswarm_msgs::LoopConstraint& constraint,rdswarm_msgs::VerifiedMatches& match_set,
+    LoopDiagnostics& diag) {
+  return verifyLoopInternal(local,remote,opts,nullptr,"bf_ratio_mutual",constraint,match_set,diag);
+}
+bool verifyLoopWithMatches(const rdswarm_msgs::LocalFeaturePacket& local,
+    const rdswarm_msgs::LocalFeaturePacket& remote,const std::vector<ExternalMatch>& matches,
+    const LoopOptions& opts,rdswarm_msgs::LoopConstraint& constraint,
+    rdswarm_msgs::VerifiedMatches& match_set,LoopDiagnostics& diag) {
+  return verifyLoopInternal(local,remote,opts,&matches,"lightglue_onnx_cpu",constraint,match_set,diag);
 }
 bool GlobalRetrievalIndex::insert(const rdswarm_msgs::KeyframeSummary& input,std::string& reason) {
   if(!frameKey(input.key).valid() || input.header.stamp.isZero() ||

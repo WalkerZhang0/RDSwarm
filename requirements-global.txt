@@ -1,0 +1,4 @@
+# ROS Noetic uses the system Python. Install ROS packages through its normal setup.
+# Validated CPU runtime; no Torch/TensorFlow/CUDA dependency.
+onnxruntime==1.16.3
+numpy>=1.21,<2

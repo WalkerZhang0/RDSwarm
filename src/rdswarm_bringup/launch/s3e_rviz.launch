@@ -1,0 +1,19 @@
+<launch>
+  <arg name="agent_id" default="0"/>
+  <arg name="agent_ns" default="agent$(arg agent_id)"/>
+  <arg name="image_topic" default="$(eval {'0': '/Alpha/left_camera/image_raw', '1': '/Carol/left_camera/image_raw'}.get(str(arg('agent_id')), '/cam0/image_raw'))"/>
+  <arg name="rviz_config" default="$(find rdswarm_bringup)/config/s3e_vins.rviz"/>
+  <group ns="$(arg agent_ns)">
+    <node pkg="rviz" type="rviz" name="rviz" output="screen"
+          args="-d &quot;$(arg rviz_config)&quot;">
+      <!-- 显式 remap 配置中的展示话题，让同一配置可分别观察 Alpha/Carol。 (Ref: 2026-10-25_Add_Manual_RViz.md) -->
+      <remap from="/rdswarm_viz/path" to="vins/path"/>
+      <remap from="/rdswarm_viz/points" to="vins/point_cloud"/>
+      <remap from="/rdswarm_viz/camera" to="vins/camera_pose_visual"/>
+      <remap from="/rdswarm_viz/raw_image" to="$(arg image_topic)"/>
+      <remap from="/rdswarm_viz/tracked_image" to="vins/image_track"/>
+      <remap from="/tf" to="tf"/>
+      <remap from="/tf_static" to="tf_static"/>
+    </node>
+  </group>
+</launch>

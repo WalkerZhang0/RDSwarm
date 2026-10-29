@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RDSwarm Framework Figure</title>
+  <style>
+    :root {
+      --ink: #102a43;
+      --muted: #52606d;
+      --line: #829ab1;
+      --blue: #e8f1fb;
+      --blue-line: #2b5c8a;
+      --data: #f5f7fa;
+      --data-line: #6b7280;
+      --contract: #fff4d6;
+      --contract-line: #b7791f;
+      --future: #f3e8ff;
+      --future-line: #7c3aed;
+      --external: #e7f6ec;
+      --external-line: #2f855a;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background: #edf2f7;
+      color: var(--ink);
+      font: 15px/1.45 system-ui, -apple-system, "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    }
+    .app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+    header {
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      padding: 14px 22px; background: #fff; border-bottom: 1px solid #d9e2ec;
+    }
+    h1 { margin: 0; font-size: 20px; letter-spacing: 0; }
+    .subtitle { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+    .toolbar { display: flex; align-items: center; gap: 8px; }
+    button {
+      min-width: 38px; height: 34px; padding: 0 10px; border: 1px solid #bcccdc;
+      border-radius: 5px; background: #fff; color: var(--ink); cursor: pointer; font: inherit;
+    }
+    button:hover, button:focus-visible { border-color: var(--blue-line); background: var(--blue); outline: none; }
+    #zoom-label { min-width: 54px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+    main { position: relative; min-height: 0; }
+    #stage { width: 100%; height: 100%; display: block; background: #f8fafc; cursor: grab; touch-action: none; }
+    #stage.dragging { cursor: grabbing; }
+    .panel { fill: #fff; stroke: #bcccdc; stroke-width: 3; }
+    .panel-title { fill: var(--ink); font-size: 24px; font-weight: 700; }
+    .panel-note { fill: var(--muted); font-size: 15px; }
+    .node { stroke-width: 2.4; }
+    .current { fill: var(--blue); stroke: var(--blue-line); }
+    .data { fill: var(--data); stroke: var(--data-line); }
+    .contract { fill: var(--contract); stroke: var(--contract-line); }
+    .future { fill: var(--future); stroke: var(--future-line); stroke-dasharray: 9 6; }
+    .external { fill: var(--external); stroke: var(--external-line); stroke-dasharray: 6 5; }
+    .node-title { fill: var(--ink); font-size: 16px; font-weight: 700; text-anchor: middle; }
+    .node-sub { fill: var(--muted); font-size: 13px; text-anchor: middle; }
+    .arrow { fill: none; stroke: #52606d; stroke-width: 2.5; marker-end: url(#arrow); }
+    .arrow.future-arrow { stroke: var(--future-line); stroke-dasharray: 8 6; }
+    .arrow.external-arrow { stroke: var(--external-line); stroke-dasharray: 6 5; }
+    .label { fill: var(--muted); font-size: 13px; font-weight: 600; text-anchor: middle; }
+    .legend-box { rx: 6; ry: 6; stroke-width: 2; }
+    .legend-text { fill: var(--ink); font-size: 14px; }
+    .caption { fill: var(--muted); font-size: 15px; }
+    .hint { position: absolute; right: 18px; bottom: 14px; padding: 7px 10px; border: 1px solid #d9e2ec; border-radius: 5px; background: rgba(255,255,255,.92); color: var(--muted); font-size: 12px; }
+    @media (max-width: 760px) {
+      header { align-items: flex-start; flex-direction: column; gap: 10px; }
+      .toolbar { width: 100%; }
+      .toolbar button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>RDSwarm 双机异步回环框架</h1>
+        <p class="subtitle">实线：当前代码路径；虚线：预留或尚未实现模块。使用滚轮、拖拽或右上角控制查看细节。</p>
+      </div>
+      <div class="toolbar" aria-label="图形控制">
+        <button id="zoom-out" aria-label="缩小">−</button>
+        <span id="zoom-label">100%</span>
+        <button id="zoom-in" aria-label="放大">+</button>
+        <button id="fit" aria-label="适配窗口">适配</button>
+        <button id="reset" aria-label="重置视图">重置</button>
+      </div>
+    </header>
+    <main>
+      <svg id="stage" viewBox="0 0 2400 1450" role="img" aria-labelledby="figure-title figure-desc">
+        <title id="figure-title">RDSwarm 双机异步回环框架</title>
+        <desc id="figure-desc">两个对称的单目 VIO 智能体通过全局候选检索和邻机局部特征交换完成回环匹配、PnP 验证和 GTSAM 后端约束输出。</desc>
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+            <path d="M0,0 L10,4 L0,8 Z" fill="#52606d"></path>
+          </marker>
+        </defs>
+        <g id="viewport">
+          <text x="60" y="58" class="caption">Solution overview · current implementation boundary and planned extension points</text>
+
+          <rect x="40" y="90" width="1035" height="1080" class="panel" rx="12"></rect>
+          <text x="72" y="135" class="panel-title">Agent A：本机回环发起方</text>
+          <text x="72" y="163" class="panel-note">本机有效三维点 + 邻机二维候选 → PnP 相对位姿</text>
+
+          <rect x="1325" y="90" width="1035" height="1080" class="panel" rx="12"></rect>
+          <text x="1357" y="135" class="panel-title">Agent B：邻机特征提供方</text>
+          <text x="1357" y="163" class="panel-note">独立 VIO、关键帧描述和按需局部特征服务</text>
+
+          <!-- Agent A top path -->
+          <g transform="translate(75,220)">
+            <rect width="145" height="72" class="node current" rx="8"></rect>
+            <text x="72.5" y="30" class="node-title">相机 + IMU</text><text x="72.5" y="52" class="node-sub">传感器输入</text>
+          </g>
+          <g transform="translate(250,220)">
+            <rect width="145" height="72" class="node current" rx="8"></rect>
+            <text x="72.5" y="30" class="node-title">vins_node</text><text x="72.5" y="52" class="node-sub">单目 VIO</text>
+          </g>
+          <g transform="translate(425,220)">
+            <rect width="145" height="72" class="node data" rx="8"></rect>
+            <text x="72.5" y="30" class="node-title">Raw Keyframe</text><text x="72.5" y="52" class="node-sub">VIO State</text>
+          </g>
+          <g transform="translate(600,220)">
+            <rect width="165" height="72" class="node current" rx="8"></rect>
+            <text x="82.5" y="30" class="node-title">feature_node</text><text x="82.5" y="52" class="node-sub">缓存 + describe</text>
+          </g>
+          <g transform="translate(795,220)">
+            <rect width="165" height="72" class="node data" rx="8"></rect>
+            <text x="82.5" y="30" class="node-title">Enriched Keyframe</text><text x="82.5" y="52" class="node-sub">VIO 2D/3D + appended 2D</text>
+          </g>
+          <g transform="translate(990,220)">
+            <rect width="165" height="72" class="node current" rx="8"></rect>
+            <text x="82.5" y="30" class="node-title">loop_node</text><text x="82.5" y="52" class="node-sub">显式服务</text>
+          </g>
+          <path d="M220,256 H250 M395,256 H425 M570,256 H600 M765,256 H795 M960,256 H990" class="arrow"></path>
+
+          <g transform="translate(560,345)">
+            <rect width="185" height="68" class="node external" rx="8"></rect>
+            <text x="92.5" y="29" class="node-title">SuperPoint dense</text><text x="92.5" y="50" class="node-sub">CPU/OpenCV 当前路径</text>
+          </g>
+          <path d="M652,345 V292" class="arrow external-arrow"></path>
+          <g transform="translate(785,345)">
+            <rect width="170" height="68" class="node external" rx="8"></rect>
+            <text x="85" y="29" class="node-title">Camera calibration</text><text x="85" y="50" class="node-sub">像素去畸变 / 归一化</text>
+          </g>
+          <path d="M870,345 V292" class="arrow external-arrow"></path>
+
+          <g transform="translate(600,485)">
+            <rect width="165" height="70" class="node data" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">KeyframeSummary</text><text x="82.5" y="51" class="node-sub">metadata / global descriptor</text>
+          </g>
+          <g transform="translate(795,485)">
+            <rect width="165" height="70" class="node current" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">Global index</text><text x="82.5" y="51" class="node-sub">CPU cosine Top-K</text>
+          </g>
+          <path d="M765,520 H795" class="arrow"></path>
+          <path d="M682,292 V485" class="arrow"></path>
+
+          <g transform="translate(600,650)">
+            <rect width="165" height="70" class="node current" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">Local matcher</text><text x="82.5" y="51" class="node-sub">BF ratio + mutual</text>
+          </g>
+          <g transform="translate(795,650)">
+            <rect width="165" height="70" class="node current" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">PnP-RANSAC</text><text x="82.5" y="51" class="node-sub">几何验收</text>
+          </g>
+          <path d="M1075,292 V685 H960" class="arrow"></path>
+          <path d="M765,685 H795" class="arrow"></path>
+          <g transform="translate(600,795)">
+            <rect width="165" height="70" class="node future" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">LightGlue</text><text x="82.5" y="51" class="node-sub">可替换匹配器</text>
+          </g>
+          <path d="M682,795 V720" class="arrow future-arrow"></path>
+          <g transform="translate(795,795)">
+            <rect width="165" height="70" class="node data" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">VerifiedMatches</text><text x="82.5" y="51" class="node-sub">LoopConstraint</text>
+          </g>
+          <path d="M877,720 V795" class="arrow"></path>
+          <g transform="translate(600,945)">
+            <rect width="165" height="70" class="node contract" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">GTSAM contract</text><text x="82.5" y="51" class="node-sub">Pose3 + covariance</text>
+          </g>
+          <path d="M877,865 V980 H765" class="arrow"></path>
+          <g transform="translate(795,945)">
+            <rect width="165" height="70" class="node future" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">iSAM2</text><text x="82.5" y="51" class="node-sub">planned backend</text>
+          </g>
+          <path d="M765,980 H795" class="arrow future-arrow"></path>
+          <g transform="translate(990,945)">
+            <rect width="165" height="70" class="node data" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">Relative state</text><text x="82.5" y="51" class="node-sub">Backend status</text>
+          </g>
+          <path d="M960,980 H990" class="arrow future-arrow"></path>
+
+          <!-- Agent B top path -->
+          <g transform="translate(1360,220)">
+            <rect width="145" height="72" class="node current" rx="8"></rect>
+            <text x="72.5" y="30" class="node-title">相机 + IMU</text><text x="72.5" y="52" class="node-sub">传感器输入</text>
+          </g>
+          <g transform="translate(1535,220)">
+            <rect width="145" height="72" class="node current" rx="8"></rect>
+            <text x="72.5" y="30" class="node-title">vins_node</text><text x="72.5" y="52" class="node-sub">单目 VIO</text>
+          </g>
+          <g transform="translate(1710,220)">
+            <rect width="145" height="72" class="node data" rx="8"></rect>
+            <text x="72.5" y="30" class="node-title">Raw Keyframe</text><text x="72.5" y="52" class="node-sub">VIO State</text>
+          </g>
+          <g transform="translate(1885,220)">
+            <rect width="165" height="72" class="node current" rx="8"></rect>
+            <text x="82.5" y="30" class="node-title">feature_node</text><text x="82.5" y="52" class="node-sub">缓存 + describe</text>
+          </g>
+          <g transform="translate(2080,220)">
+            <rect width="165" height="72" class="node data" rx="8"></rect>
+            <text x="82.5" y="30" class="node-title">Enriched Keyframe</text><text x="82.5" y="52" class="node-sub">2D/3D + appended 2D</text>
+          </g>
+          <path d="M1505,256 H1535 M1680,256 H1710 M1855,256 H1885 M2050,256 H2080" class="arrow"></path>
+          <g transform="translate(1840,345)">
+            <rect width="185" height="68" class="node external" rx="8"></rect>
+            <text x="92.5" y="29" class="node-title">SuperPoint dense</text><text x="92.5" y="50" class="node-sub">CPU/OpenCV 当前路径</text>
+          </g>
+          <path d="M1932,345 V292" class="arrow external-arrow"></path>
+          <g transform="translate(2065,345)">
+            <rect width="170" height="68" class="node external" rx="8"></rect>
+            <text x="85" y="29" class="node-title">Camera calibration</text><text x="85" y="50" class="node-sub">像素去畸变 / 归一化</text>
+          </g>
+          <path d="M2150,345 V292" class="arrow external-arrow"></path>
+          <g transform="translate(1885,485)">
+            <rect width="165" height="70" class="node data" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">KeyframeSummary</text><text x="82.5" y="51" class="node-sub">metadata / global descriptor</text>
+          </g>
+          <g transform="translate(2080,485)">
+            <rect width="165" height="70" class="node current" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">Global index</text><text x="82.5" y="51" class="node-sub">local copy</text>
+          </g>
+          <path d="M2050,520 H2080 M1967,292 V485" class="arrow"></path>
+
+          <g transform="translate(2080,650)">
+            <rect width="165" height="70" class="node current" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">loop_node</text><text x="82.5" y="51" class="node-sub">get_local_features</text>
+          </g>
+          <path d="M2162,292 V650" class="arrow"></path>
+          <g transform="translate(1885,795)">
+            <rect width="165" height="70" class="node data" rx="8"></rect>
+            <text x="82.5" y="29" class="node-title">LocalFeaturePacket</text><text x="82.5" y="51" class="node-sub">2D descriptor payload</text>
+          </g>
+          <path d="M2162,720 V830 H2050" class="arrow"></path>
+
+          <!-- Cross-agent interaction -->
+          <g transform="translate(1090,485)">
+            <rect width="220" height="70" class="node external" rx="8"></rect>
+            <text x="110" y="29" class="node-title">Candidate exchange</text><text x="110" y="51" class="node-sub">query_candidates</text>
+          </g>
+          <path d="M960,520 H1090 M1310,520 H2080" class="arrow"></path>
+          <path d="M2080,540 H1310 M1090,540 H960" class="arrow"></path>
+          <path d="M1090,555 V610 H1075" class="arrow"></path>
+
+          <g transform="translate(1090,720)">
+            <rect width="220" height="70" class="node external" rx="8"></rect>
+            <text x="110" y="29" class="node-title">ROS services</text><text x="110" y="51" class="node-sub">WiFi bridge planned</text>
+          </g>
+          <path d="M1075,685 H1090 V755" class="arrow external-arrow"></path>
+          <path d="M1310,755 H2080" class="arrow external-arrow"></path>
+          <path d="M1885,830 H1310 V755" class="arrow"></path>
+
+          <g transform="translate(1090,900)">
+            <rect width="220" height="70" class="node future" rx="8"></rect>
+            <text x="110" y="29" class="node-title">Scheduler</text><text x="110" y="51" class="node-sub">planned resource policy</text>
+          </g>
+          <path d="M1075,980 H1090 V935" class="arrow future-arrow"></path>
+          <path d="M1310,935 H1440" class="arrow future-arrow"></path>
+
+          <g transform="translate(1090,1045)">
+            <rect width="220" height="70" class="node future" rx="8"></rect>
+            <text x="110" y="29" class="node-title">MobileNetVLAD</text><text x="110" y="51" class="node-sub">planned global descriptor</text>
+          </g>
+          <path d="M1145,1045 V450 H682" class="arrow future-arrow"></path>
+          <path d="M1255,1045 V450 H1967" class="arrow future-arrow"></path>
+
+          <!-- Legend -->
+          <g transform="translate(60,1260)">
+            <rect width="28" height="22" class="legend-box current"></rect><text x="40" y="17" class="legend-text">当前处理节点</text>
+            <rect x="190" width="28" height="22" class="legend-box data"></rect><text x="230" y="17" class="legend-text">数据 / 消息</text>
+            <rect x="360" width="28" height="22" class="legend-box contract"></rect><text x="400" y="17" class="legend-text">后端契约</text>
+            <rect x="530" width="28" height="22" class="legend-box external"></rect><text x="570" y="17" class="legend-text">外部依赖 / 交互</text>
+            <rect x="760" width="28" height="22" class="legend-box future"></rect><text x="800" y="17" class="legend-text">规划模块</text>
+          </g>
+          <text x="60" y="1340" class="caption">图注：每个智能体独立运行 VIO 和关键帧描述；候选确定后按需交换局部描述子。发起方使用本机有效三维点和邻机二维点完成 PnP 几何验证。</text>
+        </g>
+      </svg>
+      <div class="hint">滚轮缩放 · 拖拽平移</div>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const svg = document.getElementById('stage');
+      const viewport = document.getElementById('viewport');
+      const label = document.getElementById('zoom-label');
+      const initial = { x: 0, y: 0, scale: 1 };
+      let view = { ...initial };
+      let drag = null;
+
+      function render() {
+        viewport.setAttribute('transform', `translate(${view.x} ${view.y}) scale(${view.scale})`);
+        label.textContent = `${Math.round(view.scale * 100)}%`;
+      }
+      function zoom(factor, cx = 1200, cy = 725) {
+        const next = Math.max(.35, Math.min(2.8, view.scale * factor));
+        const ratio = next / view.scale;
+        view.x = cx - (cx - view.x) * ratio;
+        view.y = cy - (cy - view.y) * ratio;
+        view.scale = next;
+        render();
+      }
+      document.getElementById('zoom-in').addEventListener('click', () => zoom(1.2));
+      document.getElementById('zoom-out').addEventListener('click', () => zoom(1 / 1.2));
+      document.getElementById('reset').addEventListener('click', () => { view = { ...initial }; render(); });
+      document.getElementById('fit').addEventListener('click', () => {
+        view = { x: 0, y: 0, scale: 1 };
+        render();
+      });
+      svg.addEventListener('wheel', event => {
+        event.preventDefault();
+        const box = svg.getBoundingClientRect();
+        const x = (event.clientX - box.left) / box.width * 2400;
+        const y = (event.clientY - box.top) / box.height * 1450;
+        zoom(event.deltaY < 0 ? 1.12 : 1 / 1.12, x, y);
+      }, { passive: false });
+      svg.addEventListener('pointerdown', event => {
+        drag = { x: event.clientX, y: event.clientY, tx: view.x, ty: view.y };
+        svg.classList.add('dragging');
+        svg.setPointerCapture(event.pointerId);
+      });
+      svg.addEventListener('pointermove', event => {
+        if (!drag) return;
+        const box = svg.getBoundingClientRect();
+        view.x = drag.tx + (event.clientX - drag.x) / box.width * 2400;
+        view.y = drag.ty + (event.clientY - drag.y) / box.height * 1450;
+        render();
+      });
+      svg.addEventListener('pointerup', () => { drag = null; svg.classList.remove('dragging'); });
+      svg.addEventListener('pointercancel', () => { drag = null; svg.classList.remove('dragging'); });
+      render();
+    })();
+  </script>
+</body>
+</html>

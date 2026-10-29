@@ -156,18 +156,8 @@ void publishRdswarmKeyframe(const Estimator& estimator) {
   out.velocity_vio.z=estimator.Vs[k].z();
   for (const auto& track : estimator.f_manager.feature) {
     const int observation = k-track.start_frame;
-    if (track.feature_id < 0 || track.start_frame >= k ||
-        observation < 0 || observation >= static_cast<int>(track.feature_per_frame.size()) ||
-        track.solve_flag != 1 || !std::isfinite(track.estimated_depth) ||
-        track.estimated_depth <= 0.0) continue;
-    const int host = track.start_frame;
-    const Eigen::Vector3d ph = track.feature_per_frame[0].point * track.estimated_depth;
-    const Eigen::Vector3d pw = estimator.Rs[host] *
-        (estimator.ric[0]*ph + estimator.tic[0]) + estimator.Ps[host];
-    // 三维点先还原到当前关键帧相机系，保持与该帧像素及 feature_id 一一对应。 (Ref: 2026-10-23_Init_RDSwarm_Framework.md)
-    const Eigen::Vector3d pc = estimator.ric[0].transpose() *
-        (estimator.Rs[k].transpose()*(pw-estimator.Ps[k])-estimator.tic[0]);
-    if (!pc.allFinite() || pc.z() <= 0.0) continue;
+    if (track.feature_id < 0 || track.start_frame < 0 || track.start_frame > k ||
+        observation < 0 || observation >= static_cast<int>(track.feature_per_frame.size())) continue;
     const auto& obs = track.feature_per_frame[observation];
     if (!obs.point.allFinite() || !obs.uv.allFinite() || std::abs(obs.point.z()) < 1e-12) continue;
     rdswarm_msgs::TrackedFeature feature;
@@ -176,10 +166,22 @@ void publishRdswarmKeyframe(const Estimator& estimator) {
     feature.normalized.x=obs.point.x()/obs.point.z();
     feature.normalized.y=obs.point.y()/obs.point.z();
     feature.normalized.z=1.0;
-    feature.position_camera.x=pc.x();
-    feature.position_camera.y=pc.y();
-    feature.position_camera.z=pc.z();
-    feature.position_valid=true;
+    // 二维观测不依赖深度；只有原来的成熟轨迹条件满足时才补充有效三维点。 (Ref: 2026-10-25_Extend_Peer_2D_Features.md)
+    if (track.start_frame < k && track.solve_flag == 1 &&
+        std::isfinite(track.estimated_depth) && track.estimated_depth > 0.0) {
+      const int host = track.start_frame;
+      const Eigen::Vector3d ph = track.feature_per_frame[0].point * track.estimated_depth;
+      const Eigen::Vector3d pw = estimator.Rs[host] *
+          (estimator.ric[0]*ph + estimator.tic[0]) + estimator.Ps[host];
+      const Eigen::Vector3d pc = estimator.ric[0].transpose() *
+          (estimator.Rs[k].transpose()*(pw-estimator.Ps[k])-estimator.tic[0]);
+      if (pc.allFinite() && pc.z() > 0.0) {
+        feature.position_camera.x=pc.x();
+        feature.position_camera.y=pc.y();
+        feature.position_camera.z=pc.z();
+        feature.position_valid=true;
+      }
+    }
     feature.depth_variance_valid=false;
     feature.descriptor_valid=false;
     out.features.push_back(feature);

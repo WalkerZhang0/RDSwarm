@@ -1,0 +1,39 @@
+<launch>
+  <arg name="agent_id" default="0"/>
+  <arg name="agent_ns" default="agent$(arg agent_id)"/>
+  <arg name="model_path" default="$(find rdswarm_bringup)/../../models/superpoint_dense.onnx"/>
+  <arg name="model_id" default=""/>
+  <arg name="auto_describe" default="false"/>
+  <arg name="cache_directory" default=""/>
+  <arg name="memory_keyframes" default="0"/>
+  <arg name="camera_calib_file" default="$(eval find('rdswarm_bringup') + '/config/s3e/' + {'0': 'alpha_cam0.yaml', '1': 'carol_cam0.yaml'}.get(str(arg('agent_id')), 'camera_calibration_required.yaml'))"/>
+  <arg name="append_image_features" default="true"/>
+  <arg name="image_feature_max_points" default="400"/>
+  <arg name="image_feature_score_threshold" default="0.02"/>
+  <arg name="image_feature_min_distance" default="8"/>
+  <arg name="image_feature_border" default="8"/>
+  <arg name="image_feature_grid_rows" default="16"/>
+  <arg name="image_feature_grid_cols" default="12"/>
+  <arg name="dedup_radius_px" default="4.0"/>
+  <group ns="$(arg agent_ns)">
+    <!-- 只缓存原生关键帧，默认等待 describe_keyframe 的显式调用。 (Ref: 2026-10-25_Verify_S3E_InterAgent_Loop.md) -->
+    <node pkg="rdswarm_loop" type="rdswarm_feature_node" name="features" output="screen">
+      <param name="model_path" value="$(arg model_path)"/>
+      <param name="model_id" value="$(arg model_id)"/>
+      <param name="auto_describe" type="bool" value="$(arg auto_describe)"/>
+      <param name="cache_directory" value="$(arg cache_directory)"/>
+      <param name="memory_keyframes" type="int" value="$(arg memory_keyframes)"/>
+      <!-- 邻机二维候选保留原点并追加 SP 点；归一化使用本机真实相机标定。 (Ref: 2026-10-25_Extend_Peer_2D_Features.md) -->
+      <param name="camera_calib_file" value="$(arg camera_calib_file)"/>
+      <param name="append_image_features" type="bool" value="$(arg append_image_features)"/>
+      <param name="image_feature_max_points" type="int" value="$(arg image_feature_max_points)"/>
+      <param name="image_feature_score_threshold" type="double" value="$(arg image_feature_score_threshold)"/>
+      <param name="image_feature_min_distance" type="int" value="$(arg image_feature_min_distance)"/>
+      <param name="image_feature_border" type="int" value="$(arg image_feature_border)"/>
+      <param name="image_feature_grid_rows" type="int" value="$(arg image_feature_grid_rows)"/>
+      <param name="image_feature_grid_cols" type="int" value="$(arg image_feature_grid_cols)"/>
+      <param name="dedup_radius_px" type="double" value="$(arg dedup_radius_px)"/>
+      <remap from="keyframes_in" to="vins/keyframes"/>
+    </node>
+  </group>
+</launch>

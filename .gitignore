@@ -24,3 +24,6 @@ __pycache__/
 /build*/
 /devel*/
 /models/
+
+*.db3
+*.mcap

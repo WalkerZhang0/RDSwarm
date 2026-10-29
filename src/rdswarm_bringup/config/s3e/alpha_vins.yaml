@@ -1,0 +1,56 @@
+%YAML:1.0
+---
+imu: 1
+num_of_cam: 1
+
+imu_topic: "/imu0"
+image0_topic: "/cam0/image_raw"
+image1_topic: "/cam1/image_raw"
+output_path: "/tmp/rdswarm/alpha"
+
+cam0_calib: "alpha_cam0.yaml"
+image_width: 1224
+image_height: 1024
+
+# 原始 alpha.yaml 的 Tic 将相机坐标变换到 IMU，直接对应 body_T_cam0。 (Ref: 2026-10-25_Add_S3E_Dual_VINS_Launch.md)
+estimate_extrinsic: 0
+body_T_cam0: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: d
+   data: [ 0.00671209, -0.00971447, 0.99993029, 0.14118513,
+          -0.99993865, -0.00887635, 0.00662591, 0.1552482,
+           0.00881136, -0.99991342, -0.00977345, 0.01917531,
+           0.0, 0.0, 0.0, 1.0]
+
+multiple_thread: 1
+max_cnt: 150
+min_dist: 30
+freq: 10
+F_threshold: 1.0
+show_track: 0
+flow_back: 1
+
+use_superpoint: 0
+superpoint_backend: "opencv"
+superpoint_model_path: ""
+superpoint_engine_path: ""
+superpoint_score_threshold: 0.02
+superpoint_max_keypoints: 1024
+superpoint_border: 10
+feature_diagnostics: 0
+feature_diagnostics_path: ""
+
+max_solver_time: 0.04
+max_num_iterations: 8
+keyframe_parallax: 10.0
+
+# Alpha acc_n=0.1 为当前诊断实验值，不是原始标定或已校准噪声；其他字段沿用来源值。 (Ref: 2026-10-29_Publish_Loop_Module.md)
+acc_n: 0.1
+gyr_n: 1.0451440924866223e-02
+acc_w: 2.1851827629113259e-04
+gyr_w: 8.1770009351257180e-05
+g_norm: 9.81007
+
+estimate_td: 0
+td: 0.0

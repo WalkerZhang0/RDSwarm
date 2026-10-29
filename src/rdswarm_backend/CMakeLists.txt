@@ -13,6 +13,7 @@ add_dependencies(rdswarm_backend_contract ${catkin_EXPORTED_TARGETS})
 if(CATKIN_ENABLE_TESTING)
   add_executable(constraint_contract_test test/constraint_contract_test.cpp)
   target_link_libraries(constraint_contract_test rdswarm_backend_contract)
+  add_test(NAME rdswarm_backend_contract COMMAND $<TARGET_FILE:constraint_contract_test>)
 endif()
 install(TARGETS rdswarm_backend_contract LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})

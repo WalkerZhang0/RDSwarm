@@ -1,0 +1,33 @@
+<launch>
+  <!-- S3E Alpha：单目 VINS 输入与原始话题映射。 (Ref: 2026-10-25_Add_S3E_Dual_VINS_Launch.md) -->
+  <arg name="agent_id" default="0"/>
+  <arg name="agent_ns" default="agent0"/>
+  <arg name="session_id" default="s3e_library_1"/>
+  <arg name="results_dir" default="$(find rdswarm_bringup)/../../results"/>
+  <!-- 标定随包部署，运行结果仍写 results_dir，避免依赖未上传的实验目录。 (Ref: 2026-10-29_Publish_Loop_Module.md) -->
+  <arg name="config_dir" default="$(find rdswarm_bringup)/config/s3e"/>
+  <arg name="config_file" default="$(arg config_dir)/alpha_vins.yaml"/>
+  <arg name="image_topic" default="/Alpha/left_camera/image_raw"/>
+  <arg name="imu_topic" default="/Alpha/imu/data"/>
+  <arg name="output_path" default="$(arg results_dir)/vio_alpha"/>
+  <arg name="cache_keyframes" default="true"/>
+  <arg name="use_superpoint" default="0"/>
+  <arg name="superpoint_backend" default="opencv"/>
+  <arg name="superpoint_model" default=""/>
+  <arg name="superpoint_engine" default="$(optenv RDSWARM_SUPERPOINT_ENGINE)"/>
+
+  <include file="$(find rdswarm_bringup)/launch/mono_agent.launch">
+    <arg name="agent_id" value="$(arg agent_id)"/>
+    <arg name="agent_ns" value="$(arg agent_ns)"/>
+    <arg name="session_id" value="$(arg session_id)"/>
+    <arg name="config_file" value="$(arg config_file)"/>
+    <arg name="image_topic" value="$(arg image_topic)"/>
+    <arg name="imu_topic" value="$(arg imu_topic)"/>
+    <arg name="output_path" value="$(arg output_path)"/>
+    <arg name="cache_keyframes" value="$(arg cache_keyframes)"/>
+    <arg name="use_superpoint" value="$(arg use_superpoint)"/>
+    <arg name="superpoint_backend" value="$(arg superpoint_backend)"/>
+    <arg name="superpoint_model" value="$(arg superpoint_model)"/>
+    <arg name="superpoint_engine" value="$(arg superpoint_engine)"/>
+  </include>
+</launch>

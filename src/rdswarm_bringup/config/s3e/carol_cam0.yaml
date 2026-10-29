@@ -1,0 +1,16 @@
+%YAML:1.0
+---
+model_type: PINHOLE
+camera_name: carol_left
+image_width: 1224
+image_height: 1024
+distortion_parameters:
+   k1: -0.050611950529281
+   k2: 0.097947651917225
+   p1: -0.000419283069591
+   p2: -0.000256740077382
+projection_parameters:
+   fx: 1176.269294800212
+   fy: 1176.433529657170
+   cx: 604.755275885255
+   cy: 518.745152044285

@@ -35,7 +35,7 @@ python3 scripts/convert_s3e_ros1.py \
 - conversion.json：源/目标话题、数量、时间范围、重复/回退时间统计和可读性核验。
 
 默认不覆盖已有输出。中途失败的文件保留 .partial；
-成功关闭并完整通过 ROS1 读取后才改名为 .bag。
+成功关闭并完整通过 ROS1 读取后才改名为 .bag。ssh
 
 ## 本机已完成结果
 

@@ -13,6 +13,8 @@ if(CATKIN_ENABLE_TESTING)
   add_test(NAME rdswarm_superpoint_sampling COMMAND $<TARGET_FILE:superpoint_sampling_test>)
   add_executable(superpoint_model_probe test/model_probe.cpp)
   target_link_libraries(superpoint_model_probe rdswarm_features)
+  add_executable(superpoint_image_probe test/image_probe.cpp)
+  target_link_libraries(superpoint_image_probe rdswarm_features)
 endif()
 install(TARGETS rdswarm_features LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
